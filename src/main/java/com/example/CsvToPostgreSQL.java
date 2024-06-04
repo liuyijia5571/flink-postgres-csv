@@ -8,7 +8,6 @@ import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.example.util.TableUtil.*;
 
