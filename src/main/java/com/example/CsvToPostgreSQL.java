@@ -49,7 +49,7 @@ public class CsvToPostgreSQL {
 
                             System.out.println(insertSql);
                             // 读取 CSV 文件并创建 DataStream
-                            DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath, "Shift-JIS");
+                            DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
                             // 将数据写入 PostgreSQL 数据库
                             csvDataStream.addSink(JdbcSink.sink(insertSql, (ps, t) -> {
                                         // 对每个数据元素进行写入操作

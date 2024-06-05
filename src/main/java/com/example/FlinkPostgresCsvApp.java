@@ -1,7 +1,7 @@
 package com.example;
 
 
-import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -14,6 +14,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.example.util.TableUtil.*;
@@ -70,21 +71,24 @@ public class FlinkPostgresCsvApp {
         // Process each table
         for (String tableName : tableNames.keySet()) {
             String code = tableNames.get(tableName);
+            Map<String, List<String>> columns = getColumns(DB_URL, "xuexiaodingtest", tableName.toLowerCase());
+            List<String> colNames = columns.get("COL_NAMES");
+            String collStr = colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null);
             if ("1".equals(code)) {
                 // Create a custom source function to read data from each table
-                SourceFunction<Tuple2<String, String>> sourceFunction = new PostgresTableSource(tableName, tableNames.get(tableName),null);
+                SourceFunction<Tuple1<String>> sourceFunction = new PostgresTableSource(tableName, tableNames.get(tableName),null,collStr);
 
                 // Add the source function to the execution environment
-                DataStream<Tuple2<String, String>> dataStream = env.addSource(sourceFunction);
+                DataStream<Tuple1<String>> dataStream = env.addSource(sourceFunction);
 
                 dataStream.writeAsCsv("output/" + tableName  + ".csv");
             }else {
                 for (String siksmKey : siksmMap.keySet()) {
                     // Create a custom source function to read data from each table
-                    SourceFunction<Tuple2<String, String>> sourceFunction = new PostgresTableSource(tableName, tableNames.get(tableName), siksmMap.get(siksmKey));
+                    SourceFunction<Tuple1<String>> sourceFunction = new PostgresTableSource(tableName, tableNames.get(tableName), siksmMap.get(siksmKey), collStr);
 
                     // Add the source function to the execution environment
-                    DataStream<Tuple2<String, String>> dataStream = env.addSource(sourceFunction);
+                    DataStream<Tuple1<String>> dataStream = env.addSource(sourceFunction);
                     // Set the parallelism to 1 to ensure all data goes to a single file
                     dataStream.writeAsCsv("output/" + siksmKey  + "_" + tableName + ".csv");
 
@@ -123,25 +127,31 @@ public class FlinkPostgresCsvApp {
         return tableNames;
     }
 
-    private static class PostgresTableSource implements SourceFunction<Tuple2<String, String>> {
+    private static class PostgresTableSource implements SourceFunction<Tuple1<String>> {
         private volatile boolean isRunning = true;
         private final String tableName;
         private final String code;
         private final String sikmValue;
+        private final String collStr;
 
-        public PostgresTableSource(String tableName, String code, String sikmValue) {
+        public PostgresTableSource(String tableName, String code, String sikmValue, String collStr) {
             this.tableName = tableName;
             this.code = code;
             this.sikmValue = sikmValue;
+            this.collStr = collStr;
         }
 
         @Override
-        public void run(SourceContext<Tuple2<String, String>> ctx) throws Exception {
+        public void run(SourceContext<Tuple1<String>> ctx) throws Exception {
             Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             Statement stmt = conn.createStatement();
-            String sql = "SELECT * FROM xuexiaodingtest." + tableName ;
+            StringBuilder sbSql = new StringBuilder();
+            sbSql.append("SELECT ").append(collStr).append(" FROM xuexiaodingtest.")
+                    .append(tableName);
             if (null != sikmValue )
-                sql+= " where " + code + " = '" + sikmValue + "'";
+                sbSql.append(" where ").append(code).append(" = '").append(sikmValue).append("'");
+            String sql = sbSql.toString();
+            System.out.println("执行的sql：" + sql);
             ResultSet rs = stmt.executeQuery(sql);
 
             int columnCount = rs.getMetaData().getColumnCount();
@@ -153,7 +163,7 @@ public class FlinkPostgresCsvApp {
                         sb.append(",");
                     }
                 }
-                ctx.collect(new Tuple2<>(tableName, sb.toString()));
+                ctx.collect(new Tuple1<>(sb.toString()));
             }
 
             rs.close();

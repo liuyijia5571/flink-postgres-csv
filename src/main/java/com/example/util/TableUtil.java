@@ -55,7 +55,7 @@ public class TableUtil {
         ResultSet rs = stmt.executeQuery(sb.toString());
 
         while (rs.next()) {
-            if (!rs.getString("column_name").equals("seq_no")) {
+            if (!rs.getString("column_name").equalsIgnoreCase("seq_no")) {
                 colNames.add(rs.getString("column_name"));
                 colClass.add(rs.getString("data_type"));
             }
