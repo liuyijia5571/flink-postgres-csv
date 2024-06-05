@@ -40,6 +40,12 @@ public class Mashin00ToPostgreSQL {
         //设置并行数
 //        env.setParallelism(1);
 
+        Map<String, List<String>> columns = getColumns(DB_URL, schemaName, tableName, true);
+        List<String> colNames = columns.get("COL_NAMES");
+        List<String> colClasses = columns.get("COL_CLASS");
+        String insertSql = getInsertSql(colNames, schemaName, tableName);
+        System.out.println(insertSql);
+
         // CSV 文件路径
         String folderPath = "input";
         File folder = new File(folderPath);
@@ -48,13 +54,6 @@ public class Mashin00ToPostgreSQL {
             if (files != null) {
                 for (File file : files) {
                     if (!file.isDirectory()) {
-                        Map<String, List<String>> columns = getColumns(DB_URL, schemaName, tableName, true);
-                        List<String> colNames = columns.get("COL_NAMES");
-                        String insertSql = getInsertSql(colNames, schemaName, tableName);
-
-                        System.out.println(insertSql);
-
-                        List<String> colClasses = columns.get("COL_CLASS");
 
                         // 读取 CSV 文件并创建 DataStream
                         String csvFilePath = folderPath + "/" + file.getName();
