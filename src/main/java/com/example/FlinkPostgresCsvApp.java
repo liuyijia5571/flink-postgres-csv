@@ -16,8 +16,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.example.util.TableUtil.DB_PASSWORD;
-import static com.example.util.TableUtil.DB_USER;
+import static com.example.util.TableUtil.*;
 
 public class FlinkPostgresCsvApp {
 
@@ -48,19 +47,7 @@ public class FlinkPostgresCsvApp {
 //        流通Ｃ                                       NRC                      70
 
     }
-    public static void deleteFolder(File folder) {
-        File[] files = folder.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    deleteFolder(file);
-                } else {
-                    file.delete();
-                }
-            }
-        }
-        folder.delete();
-    }
+
 
     public static void main(String[] args) throws Exception {
         // Set up the execution environment

@@ -3,6 +3,7 @@ package com.example.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
@@ -90,5 +91,19 @@ public class TableUtil {
                 ps.setString(parameterIndex, dataValue);
                 break;
         }
+    }
+
+    public static void deleteFolder(File folder) {
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteFolder(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        folder.delete();
     }
 }

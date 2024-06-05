@@ -5,7 +5,8 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 
 import java.io.File;
 
-import static com.example.FlinkPostgresCsvApp.deleteFolder;
+import static com.example.util.TableUtil.deleteFolder;
+
 
 public class splitWord {
 
