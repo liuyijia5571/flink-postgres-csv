@@ -28,12 +28,12 @@ public class TableUtil {
 
     public static String getInsertSql(List<String> colNames, String schemaName, String tableName) {
         StringBuffer sb = new StringBuffer();
-        String collStr = colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null);
+        String colStr = colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null);
         sb.append("INSERT INTO ").append(schemaName).append(".").append(tableName).append("(");
-        sb.append(collStr);
+        sb.append(colStr);
         sb.append(") VALUES (");
-        String valStr = colNames.stream().map(u -> " ? ,").collect(Collectors.joining());
-        sb.append(valStr.substring(0, valStr.length() - 1));
+        String valStr = colNames.stream().map(u -> " ? ").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
+        sb.append(valStr);
         sb.append(")");
         return sb.toString();
     }
