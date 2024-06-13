@@ -1,6 +1,6 @@
 package com.example;
 
-import com.example.util.ConfigLoader;
+import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -9,33 +9,24 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import static com.example.util.TableUtil.getColumns;
-import static com.example.util.TableUtil.getConnectionOptions;
-import static com.example.util.TableUtil.getInsertSql;
-import static com.example.util.TableUtil.jdbcExecutionOptions;
-import static com.example.util.TableUtil.setPsData;
+import static com.example.util.TableUtil.*;
 
-
-public class CsvToPostgreSQL {
+public class TxtToPostgreSQL {
 
     public static void main(String[] args) throws Exception {
-        // 创建流执行环境
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-//        env.setParallelism(1);
 
-        if (args.length < 2) {
-            System.err.println("args.length  < 2");
+        if (args.length < 1) {
+            System.err.println("args.length  < 1");
             return;
         }
-
+        // 创建流执行环境
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         // CSV 文件路径
+
         String folderPath = args[0];
 
-        // 通过命令行参来选择配置文件
-        String activeProfile = args[1];
-        ConfigLoader.loadConfiguration(activeProfile);
-
         File folder = new File(folderPath);
+        StringBuffer sb = new StringBuffer();
         if (folder.exists()) {
             File[] files = folder.listFiles();
             if (files != null) {
@@ -51,16 +42,16 @@ public class CsvToPostgreSQL {
 
                             Map<String, List<String>> columns = null;
 
-                            if (schemaName.contains("all")) {
-                                columns = getColumns(schemaName, tableName);
-                            } else {
-                                columns = getColumns(schemaName, tableName, true);
-                            }
+                            columns = getColumns(schemaName, tableName, true);
+
                             List<String> colClasses = columns.get("COL_CLASS");
                             List<String> colNames = columns.get("COL_NAMES");
                             if (colNames.size() == 0)
                                 continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
+
+                            sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").
+                                    append(schemaName).append(".").append(tableName).append(" ;\n");
 
                             System.out.println(insertSql);
                             // 读取 CSV 文件并创建 DataStream
@@ -68,7 +59,7 @@ public class CsvToPostgreSQL {
                             // 将数据写入 PostgreSQL 数据库
                             csvDataStream.addSink(JdbcSink.sink(insertSql, (ps, t) -> {
                                         // 对每个数据元素进行写入操作
-                                        String[] datas = t.split("\\|");
+                                        String[] datas = t.split("\t");
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
@@ -82,6 +73,7 @@ public class CsvToPostgreSQL {
                 }
             }
         }
+        System.err.println(sb);
         // 执行流处理
         env.execute("Flink CSV to PostgreSQL ");
     }

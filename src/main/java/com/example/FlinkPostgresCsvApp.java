@@ -13,8 +13,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import static com.example.util.ConfigLoader.getDatabasePassword;
+import static com.example.util.ConfigLoader.getDatabaseUrl;
+import static com.example.util.ConfigLoader.getDatabaseUsername;
 import static com.example.util.TableUtil.*;
 
 public class FlinkPostgresCsvApp {
@@ -55,12 +61,13 @@ public class FlinkPostgresCsvApp {
 
     }
 
-
     public static void main(String[] args) throws Exception {
+
         // Set up the execution environment
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         // Set the parallelism to 1 to ensure all data goes to a single file
         env.setParallelism(1);
+
         String folderPath = "output";
 
         File folder = new File(folderPath);
@@ -77,7 +84,7 @@ public class FlinkPostgresCsvApp {
         // Process each table
         for (String tableName : tableNames.keySet()) {
             String code = tableNames.get(tableName);
-            Map<String, List<String>> columns = getColumns(DB_URL, "xuexiaodingtest", tableName.toLowerCase());
+            Map<String, List<String>> columns = getColumns("xuexiaodingtest", tableName.toLowerCase());
             List<String> colNames = columns.get("COL_NAMES");
             String colStr = colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null);
             if (subTable.contains(tableName)) {
@@ -92,7 +99,7 @@ public class FlinkPostgresCsvApp {
                     DataStream<Tuple1<String>> dataStream = env.addSource(sourceFunction);
                     String fileName = splitWhere[1].replace(".", "_").toUpperCase();
 
-                    dataStream.writeAsCsv("output/" + fileName  + ".csv");
+                    dataStream.writeAsCsv("output/" + fileName  + ".txt");
                 }
             }else{
                 if ("1".equals(code)) {
@@ -102,7 +109,7 @@ public class FlinkPostgresCsvApp {
                     // Add the source function to the execution environment
                     DataStream<Tuple1<String>> dataStream = env.addSource(sourceFunction);
 
-                    dataStream.writeAsCsv("output/RENDAYALL_" + tableName  + ".csv");
+                    dataStream.writeAsCsv("output/RENDAYALL_" + tableName  + ".txt");
                 }else {
                     for (String siksmKey : siksmMap.keySet()) {
                         // Create a custom source function to read data from each table
@@ -112,9 +119,9 @@ public class FlinkPostgresCsvApp {
                         DataStream<Tuple1<String>> dataStream = env.addSource(sourceFunction);
                         // Set the parallelism to 1 to ensure all data goes to a single file
                         if (tableName.equalsIgnoreCase("KANFILD0")) {
-                            dataStream.writeAsCsv("output/RENBAK" + siksmKey + "_" + tableName + ".csv");
+                            dataStream.writeAsCsv("output/RENBAK" + siksmKey + "_" + tableName + ".txt");
                         }else {
-                            dataStream.writeAsCsv("output/RENDAY" + siksmKey + "_" + tableName + ".csv");
+                            dataStream.writeAsCsv("output/RENDAY" + siksmKey + "_" + tableName + ".txt");
                         }
                     }
                 }
@@ -234,7 +241,7 @@ public class FlinkPostgresCsvApp {
 
         @Override
         public void run(SourceContext<Tuple1<String>> ctx) throws Exception {
-            Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            Connection conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
             Statement stmt = conn.createStatement();
             StringBuilder sbSql = new StringBuilder();
             sbSql.append("SELECT ").append(collStr).append(" FROM xuexiaodingtest.")
@@ -254,7 +261,7 @@ public class FlinkPostgresCsvApp {
                 for (int i = 1; i <= columnCount; i++) {
                     sb.append(rs.getString(i));
                     if (i < columnCount) {
-                        sb.append(",");
+                        sb.append("|");
                     }
                 }
                 ctx.collect(new Tuple1<>(sb.toString()));
