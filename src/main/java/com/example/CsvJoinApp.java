@@ -95,7 +95,7 @@ public class CsvJoinApp {
 
         differenceStream.writeAsText(folderPath);
 
-        env.execute("CsvJionApp job execute");
+        env.execute("flink csvJionApp job");
 
     }
 }

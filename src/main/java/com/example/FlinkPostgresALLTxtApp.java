@@ -72,7 +72,7 @@ public class FlinkPostgresALLTxtApp {
         }
 
         // Execute the Flink job
-        if (executeFlag) env.execute("Flink PostgreSQL to CSV Job");
+        if (executeFlag) env.execute("Flink FlinkPostgresALLTxtApp Job");
     }
 
     private static class PostgresTableSource implements SourceFunction<Tuple1<String>> {

@@ -83,6 +83,6 @@ public class CsvToPostgreSQL {
             }
         }
         // 执行流处理
-        env.execute("Flink CSV to PostgreSQL ");
+        env.execute("Flink CsvToPostgreSQL ");
     }
 }

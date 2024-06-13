@@ -128,7 +128,7 @@ public class FlinkPostgresTxtApp {
         }
 
         // Execute the Flink job
-        env.execute("Flink PostgreSQL to CSV Job");
+        env.execute("Flink FlinkPostgresTxtApp Job");
     }
 
     private static Map<String, String> getAllTableNames() {
