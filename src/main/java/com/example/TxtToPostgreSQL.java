@@ -1,6 +1,5 @@
 package com.example;
 
-import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -40,13 +39,13 @@ public class TxtToPostgreSQL {
                             String schemaName = tableNameArr[0].toLowerCase();
                             String tableName = tableNameArr[1].split("\\.")[0].toLowerCase();
 
-                            Map<String, List<String>> columns = null;
+                            Map<String, List<String>> columns;
 
                             columns = getColumns(schemaName, tableName, true);
 
                             List<String> colClasses = columns.get("COL_CLASS");
                             List<String> colNames = columns.get("COL_NAMES");
-                            if (colNames.size() == 0)
+                            if (colNames.isEmpty())
                                 continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 

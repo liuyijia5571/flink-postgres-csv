@@ -128,7 +128,7 @@ public class FlinkPostgresALLCsvApp {
         }
     }
 
-    public static List<String> getAllTableNames() throws Exception {
+    public static List<String> getAllTableNames() {
         List<String> list = new ArrayList<>();
         list.add("RENDAYALL.SUMKIC00");
         list.add("RENDAYALL.SUMURC00");

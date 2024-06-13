@@ -33,8 +33,8 @@ public class MultiFileSourceToPostgreSQL {
                 }
             }
         }
-        if (filesPath.size() == 0){
-            System.err.println("files.size() = 0");
+        if (filesPath.isEmpty()){
+            System.err.println("files isEmpty ");
             return;
         }
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();

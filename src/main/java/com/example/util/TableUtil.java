@@ -58,7 +58,7 @@ public class TableUtil {
     }
 
     public static Map<String, List<String>> getColumns(String schema, String tableName, boolean isTruncate) throws Exception {
-        Map columnsMap = new HashMap();
+        Map<String, List<String>> columnsMap = new HashMap();
         List<String> colNames = new ArrayList<>();
         List<String> colClass = new ArrayList<>();
         Connection conn = DriverManager.getConnection(ConfigLoader.getDatabaseUrl(), ConfigLoader.getDatabaseUsername(), ConfigLoader.getDatabasePassword());
@@ -83,19 +83,19 @@ public class TableUtil {
         columnsMap.put("COL_CLASS", colClass);
         rs.close();
 
-        if (isTruncate && colNames.size() > 0) {
+        if (isTruncate && !colNames.isEmpty()) {
             sb.setLength(0);
             sb.append("truncate table ").append(schema).append(".").append(tableName);
             System.out.println("执行sql：" + sb);
             stmt.execute(sb.toString());
         }
-        if (colNames.size() == 0) System.err.println("数据库中没有表：" + schema + "." + tableName);
+        if (colNames.isEmpty()) System.err.println("数据库中没有表：" + schema + "." + tableName);
         stmt.close();
         conn.close();
         return columnsMap;
     }
 
-    public static void setPsData(int parameterIndex, String colName, String colClass, String dataValue, PreparedStatement ps, String tableName) throws SQLException, SQLException {
+    public static void setPsData(int parameterIndex, String colName, String colClass, String dataValue, PreparedStatement ps, String tableName) throws SQLException {
         //character,numeric,character varying,timestamp without time zone
         switch (colClass) {
             case "numeric":
@@ -139,7 +139,6 @@ public class TableUtil {
                     // 计算天数部分和时间部分
                     double excelDate = Double.parseDouble(dataValue);
                     int days = (int) excelDate;
-                    ;
                     double fraction = excelDate - days;
 
                     // 基准日期

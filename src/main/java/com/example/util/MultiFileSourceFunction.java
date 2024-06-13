@@ -22,7 +22,7 @@ public class MultiFileSourceFunction implements SourceFunction<Tuple3<String, St
     }
 
     @Override
-    public void run(SourceFunction.SourceContext<Tuple3<String, String, String>> ctx) throws Exception {
+    public void run(SourceFunction.SourceContext<Tuple3<String, String, String>> ctx) {
         // 恢复时从上次的 offset 开始读取
         for (String filePath : filePaths) {
             int lastIndexOf = filePath.lastIndexOf(File.separator);

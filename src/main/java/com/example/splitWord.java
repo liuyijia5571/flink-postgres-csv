@@ -28,7 +28,7 @@ public class splitWord {
         String outFile = "output/address/splitAddress.txt";
         env.readTextFile(filePath).map(new RichMapFunction<String, Object>() {
                     @Override
-                    public Object map(String value) throws Exception {
+                    public Object map(String value) {
                         StringBuilder result = new StringBuilder();
                         int length = value.length();
                         for (int i = 0; i < length; i += 14) {

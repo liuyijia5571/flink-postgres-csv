@@ -49,7 +49,7 @@ public class CsvToPostgreSQL {
                             String schemaName = tableNameArr[0].toLowerCase();
                             String tableName = tableNameArr[1].split("\\.")[0].toLowerCase();
 
-                            Map<String, List<String>> columns = null;
+                            Map<String, List<String>> columns;
 
                             if (schemaName.contains("all")) {
                                 columns = getColumns(schemaName, tableName);
@@ -58,7 +58,7 @@ public class CsvToPostgreSQL {
                             }
                             List<String> colClasses = columns.get("COL_CLASS");
                             List<String> colNames = columns.get("COL_NAMES");
-                            if (colNames.size() == 0)
+                            if (colNames.isEmpty())
                                 continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 
