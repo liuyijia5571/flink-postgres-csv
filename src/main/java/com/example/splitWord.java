@@ -11,10 +11,16 @@ import static com.example.util.TableUtil.deleteFolder;
 public class splitWord {
 
     public static void main(String[] args) throws Exception {
+        if (args.length < 2) {
+            System.err.println("args length < 2");
+            return;
+        }
         // 设置执行环境
         final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
-        String folderPath = "output/address";
+
+        String filePath = args[0];
+        String folderPath = args[1];
 
         File folder = new File(folderPath);
         if (folder.exists()) {
@@ -24,8 +30,8 @@ public class splitWord {
             System.out.println("Folder does not exist.");
         }
         // 读取文本文件
-        String filePath = "input/address.txt";
-        String outFile = "output/address/splitAddress.txt";
+        String outFile = folderPath + File.separatorChar + "splitAddress.txt";
+
         env.readTextFile(filePath).map(new RichMapFunction<String, Object>() {
                     @Override
                     public Object map(String value) {
