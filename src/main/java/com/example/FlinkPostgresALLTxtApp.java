@@ -22,7 +22,7 @@ import static com.example.util.ConfigLoader.getDatabaseUrl;
 import static com.example.util.ConfigLoader.getDatabaseUsername;
 import static com.example.util.TableUtil.*;
 
-public class FlinkPostgresALLCsvApp {
+public class FlinkPostgresALLTxtApp {
 
     private static boolean executeFlag = false;
 

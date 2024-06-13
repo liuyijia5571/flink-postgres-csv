@@ -66,7 +66,7 @@ public class TxtToPostgreSQL {
                             // 将数据写入 PostgreSQL 数据库
                             csvDataStream.addSink(JdbcSink.sink(insertSql, (ps, t) -> {
                                         // 对每个数据元素进行写入操作
-                                        String[] datas = t.split("|");
+                                        String[] datas = t.split("\\|");
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
