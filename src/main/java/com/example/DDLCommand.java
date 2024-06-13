@@ -1,6 +1,5 @@
 package com.example;
 
-
 import com.example.util.ConfigLoader;
 
 import java.io.File;
@@ -9,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static com.example.util.TableUtil.executeSql;
-
 
 public class DDLCommand {
 
@@ -39,7 +37,7 @@ public class DDLCommand {
                         }
                         String sql = sqlBuilder.toString();
                         System.out.println("执行的文件名：" + file.getName());
-                        executeSql( sql);
+                        executeSql(sql);
 
                     }
                 }
