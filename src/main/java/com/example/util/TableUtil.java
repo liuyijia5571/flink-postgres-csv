@@ -61,7 +61,7 @@ public class TableUtil {
         Map<String, List<String>> columnsMap = new HashMap();
         List<String> colNames = new ArrayList<>();
         List<String> colClass = new ArrayList<>();
-        Connection conn = DriverManager.getConnection(ConfigLoader.getDatabaseUrl(), ConfigLoader.getDatabaseUsername(), ConfigLoader.getDatabasePassword());
+        Connection conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
         Statement stmt = conn.createStatement();
         StringBuffer sb = new StringBuffer();
         sb.append("SELECT column_name, data_type ");
@@ -213,10 +213,10 @@ public class TableUtil {
 
     public static JdbcConnectionOptions getConnectionOptions() {
         return new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
-                .withUrl(ConfigLoader.getDatabaseUrl())
+                .withUrl(getDatabaseUrl())
                 .withDriverName("org.postgresql.Driver")
-                .withUsername(ConfigLoader.getDatabaseUsername())
-                .withPassword(ConfigLoader.getDatabasePassword())
+                .withUsername(getDatabaseUsername())
+                .withPassword(getDatabasePassword())
                 .build();
 
     }
