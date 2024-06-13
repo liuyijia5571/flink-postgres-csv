@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static com.example.util.ConfigLoader.TEST05;
 import static com.example.util.TableUtil.executeSql;
 
 
@@ -16,12 +15,12 @@ public class DDLCommand {
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length < 1) {
-            System.err.println("args.length  < 1");
+        if (args.length < 2) {
+            System.err.println("args.length  < 2");
             return;
         }
 
-        ConfigLoader.loadConfiguration(TEST05);
+        ConfigLoader.loadConfiguration(args[1]);
 
         String folderPath = args[0];
         File folder = new File(folderPath);
