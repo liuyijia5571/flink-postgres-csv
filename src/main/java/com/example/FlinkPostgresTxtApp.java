@@ -25,8 +25,8 @@ import static com.example.util.TableUtil.*;
 
 public class FlinkPostgresTxtApp {
 
-    static Map<String, String> siksmMap = new HashMap<String, String>();
-    static List<String> subTable = new ArrayList<String>();
+    static Map<String, String> siksmMap = new HashMap<>();
+    static List<String> subTable = new ArrayList<>();
 
     static {
         //长应
