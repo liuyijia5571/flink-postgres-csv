@@ -23,10 +23,10 @@ import static com.example.util.ConfigLoader.getDatabaseUrl;
 import static com.example.util.ConfigLoader.getDatabaseUsername;
 import static com.example.util.TableUtil.*;
 
-public class FlinkPostgresCsvApp {
+public class FlinkPostgresTxtApp {
 
-    static Map<String, String> siksmMap = new HashMap();
-    static List<String> subTable = new ArrayList();
+    static Map<String, String> siksmMap = new HashMap<String, String>();
+    static List<String> subTable = new ArrayList<String>();
 
     static {
         //长应

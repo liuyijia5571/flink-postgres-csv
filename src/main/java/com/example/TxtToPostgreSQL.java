@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.util.ConfigLoader;
 import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -8,14 +9,19 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import static com.example.util.TableUtil.*;
+import static com.example.util.TableUtil.getColumns;
+import static com.example.util.TableUtil.getConnectionOptions;
+import static com.example.util.TableUtil.getInsertSql;
+import static com.example.util.TableUtil.jdbcExecutionOptions;
+import static com.example.util.TableUtil.setPsData;
+
 
 public class TxtToPostgreSQL {
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length < 1) {
-            System.err.println("args.length  < 1");
+        if (args.length < 2) {
+            System.err.println("args.length  < 2");
             return;
         }
         // 创建流执行环境
@@ -23,6 +29,8 @@ public class TxtToPostgreSQL {
         // CSV 文件路径
 
         String folderPath = args[0];
+
+        ConfigLoader.loadConfiguration(args[1]);
 
         File folder = new File(folderPath);
         StringBuffer sb = new StringBuffer();
@@ -58,7 +66,7 @@ public class TxtToPostgreSQL {
                             // 将数据写入 PostgreSQL 数据库
                             csvDataStream.addSink(JdbcSink.sink(insertSql, (ps, t) -> {
                                         // 对每个数据元素进行写入操作
-                                        String[] datas = t.split("\t");
+                                        String[] datas = t.split("|");
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
