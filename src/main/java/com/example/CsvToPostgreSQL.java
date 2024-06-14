@@ -41,7 +41,7 @@ public class CsvToPostgreSQL {
         String activeProfile = args[1];
 
         boolean isTruncate = false;
-        if (args.length >= 2) {
+        if (args.length > 2) {
             if ("true".equalsIgnoreCase(args[2])) {
                 isTruncate = true;
             }

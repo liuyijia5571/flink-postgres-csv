@@ -36,7 +36,7 @@ public class TxtToPostgreSQL {
         String activeProfile = args[0];
 
         boolean isTruncate = false;
-        if (args.length >= 2) {
+        if (args.length > 2) {
             if ("true".equalsIgnoreCase(args[2])) {
                 isTruncate = true;
             }
