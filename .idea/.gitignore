@@ -2,3 +2,4 @@
 /shelf/
 /workspace.xml
 ../.idea/*.xml
+../src/main/resources/application-test05.properties

@@ -4,6 +4,8 @@ import com.example.util.ConfigLoader;
 import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
@@ -18,19 +20,35 @@ import static com.example.util.TableUtil.setPsData;
 
 public class TxtToPostgreSQL {
 
+    private static final Logger logger = LoggerFactory.getLogger(TxtToPostgreSQL.class);
+
     public static void main(String[] args) throws Exception {
 
         if (args.length < 2) {
-            System.err.println("args.length  < 2");
+            logger.error("args.length  < 2");
             return;
         }
         // 创建流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.enableCheckpointing();
+
+        // 通过命令行参来选择配置文件
+        String activeProfile = args[0];
+
+        boolean isTruncate = false;
+        if (args.length >= 2) {
+            if ("true".equalsIgnoreCase(args[2])) {
+                isTruncate = true;
+            }
+        }
+        logger.info("truncate is ", isTruncate);
         // CSV 文件路径
 
-        String folderPath = args[0];
+        String folderPath = args[1];
 
-        ConfigLoader.loadConfiguration(args[1]);
+        logger.info("txt path is ", folderPath);
+
+        ConfigLoader.loadConfiguration(activeProfile);
 
         File folder = new File(folderPath);
         StringBuffer sb = new StringBuffer();
@@ -49,7 +67,7 @@ public class TxtToPostgreSQL {
 
                             Map<String, List<String>> columns;
 
-                            columns = getColumns(schemaName, tableName, true);
+                            columns = getColumns(schemaName, tableName, isTruncate);
 
                             List<String> colClasses = columns.get("COL_CLASS");
                             List<String> colNames = columns.get("COL_NAMES");
@@ -60,7 +78,7 @@ public class TxtToPostgreSQL {
                             sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").
                                     append(schemaName).append(".").append(tableName).append(" ;\n");
 
-                            System.out.println(insertSql);
+                            logger.info(insertSql);
                             // 读取 CSV 文件并创建 DataStream
                             DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
                             // 将数据写入 PostgreSQL 数据库
@@ -80,8 +98,13 @@ public class TxtToPostgreSQL {
                 }
             }
         }
-        System.err.println(sb);
+        logger.info(sb.toString());
+
         // 执行流处理
-        env.execute("Flink txt to PostgreSQL ");
+        logger.info("Flink TxtToPostgreSQL job started");
+
+        env.execute("TxtToPostgreSQL ");
+
+        logger.info("Flink TxtToPostgreSQL job finished");
     }
 }

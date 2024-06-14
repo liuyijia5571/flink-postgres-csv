@@ -4,6 +4,8 @@ import com.example.util.ConfigLoader;
 import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
@@ -18,9 +20,12 @@ import static com.example.util.TableUtil.setPsData;
 
 public class CsvToPostgreSQL {
 
+    private static final Logger logger = LoggerFactory.getLogger(CsvToPostgreSQL.class);
+
     public static void main(String[] args) throws Exception {
         // 创建流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.enableCheckpointing();
 //        env.setParallelism(1);
 
         if (args.length < 2) {
@@ -30,9 +35,19 @@ public class CsvToPostgreSQL {
 
         // CSV 文件路径
         String folderPath = args[0];
+        logger.info("txt path is ", folderPath);
 
         // 通过命令行参来选择配置文件
         String activeProfile = args[1];
+
+        boolean isTruncate = false;
+        if (args.length >= 2) {
+            if ("true".equalsIgnoreCase(args[2])) {
+                isTruncate = true;
+            }
+        }
+        logger.info("truncate is ", isTruncate);
+
         ConfigLoader.loadConfiguration(activeProfile);
 
         File folder = new File(folderPath);
@@ -50,19 +65,14 @@ public class CsvToPostgreSQL {
                             String tableName = tableNameArr[1].split("\\.")[0].toLowerCase();
 
                             Map<String, List<String>> columns;
-
-                            if (schemaName.contains("all")) {
-                                columns = getColumns(schemaName, tableName);
-                            } else {
-                                columns = getColumns(schemaName, tableName, true);
-                            }
+                            columns = getColumns(schemaName, tableName, isTruncate);
                             List<String> colClasses = columns.get("COL_CLASS");
                             List<String> colNames = columns.get("COL_NAMES");
                             if (colNames.isEmpty())
                                 continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 
-                            System.out.println(insertSql);
+                            logger.info(insertSql);
                             // 读取 CSV 文件并创建 DataStream
                             DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
                             // 将数据写入 PostgreSQL 数据库
@@ -82,7 +92,10 @@ public class CsvToPostgreSQL {
                 }
             }
         }
+        logger.info("Flink CsvToPostgreSQL job started");
         // 执行流处理
         env.execute("Flink CsvToPostgreSQL ");
+
+        logger.info("Flink CsvToPostgreSQL job finished");
     }
 }

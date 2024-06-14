@@ -3,6 +3,8 @@ package com.example.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -29,10 +31,9 @@ import static com.example.util.ConfigLoader.getDatabaseUsername;
 
 public class TableUtil {
 
-    public static final String[] possibleFormats = {
-            "yyyy/MM/dd HH:mm:ss",
-            "yyyy/MM/dd HH:mm:ss.SSS"
-    };
+    private static final Logger logger = LoggerFactory.getLogger(TableUtil.class);
+
+    public static final String[] possibleFormats = {"yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm:ss.SSS"};
 
     public static final Timestamp timestampDate = Timestamp.valueOf("1990-01-01 00:00:00");
 
@@ -70,7 +71,7 @@ public class TableUtil {
         sb.append(schema).append("' AND table_name = '");
         sb.append(tableName).append("'");
 
-        System.out.println("执行sql：" + sb);
+        logger.info("执行sql：", sb);
         ResultSet rs = stmt.executeQuery(sb.toString());
 
         while (rs.next()) {
@@ -86,10 +87,10 @@ public class TableUtil {
         if (isTruncate && !colNames.isEmpty()) {
             sb.setLength(0);
             sb.append("truncate table ").append(schema).append(".").append(tableName);
-            System.out.println("执行sql：" + sb);
+            logger.info("执行sql：" + sb);
             stmt.execute(sb.toString());
         }
-        if (colNames.isEmpty()) System.err.println("数据库中没有表：" + schema + "." + tableName);
+        if (colNames.isEmpty()) logger.error("数据库中没有表：", schema, ".", tableName);
         stmt.close();
         conn.close();
         return columnsMap;
@@ -103,7 +104,7 @@ public class TableUtil {
                     try {
                         ps.setBigDecimal(parameterIndex, new BigDecimal(dataValue));
                     } catch (Exception e) {
-                        System.err.println("表名：" + tableName + ",字段是：" + colName + " 值是：" + dataValue);
+                        logger.error("表名：", tableName, ",字段是：", colName, " 值是：", dataValue);
                         ps.setBigDecimal(parameterIndex, new BigDecimal(0));
                     }
 
@@ -116,7 +117,7 @@ public class TableUtil {
                     try {
                         ps.setTimestamp(parameterIndex, Timestamp.valueOf(dataValue));
                     } catch (Exception e) {
-                        System.err.println("表名：" + tableName + "字段是：" + colName + " 值是：" + dataValue);
+                        logger.error("表名：", tableName, "字段是：", colName, " 值是：", dataValue);
                         ps.setTimestamp(parameterIndex, timestampDate);
                     }
                 } else if (dataValue.indexOf("/") != -1) {
@@ -128,11 +129,11 @@ public class TableUtil {
                             Timestamp timestamp = new Timestamp(time);
                             ps.setTimestamp(parameterIndex, timestamp);
                         } else {
-                            System.err.println("表名：" + tableName + "字段是：" + colName + " 值是：" + dataValue);
+                            logger.error("表名：", tableName, "字段是：", colName, " 值是：", dataValue);
                             ps.setTimestamp(parameterIndex, timestampDate);
                         }
                     } catch (ParseException e) {
-                        System.err.println("表名：" + tableName + "字段是：" + colName + " 值是：" + dataValue);
+                        logger.error("表名：", tableName, "字段是：", colName, " 值是：", dataValue);
                         ps.setTimestamp(parameterIndex, timestampDate);
                     }
                 } else {
@@ -212,12 +213,6 @@ public class TableUtil {
     }
 
     public static JdbcConnectionOptions getConnectionOptions() {
-        return new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
-                .withUrl(getDatabaseUrl())
-                .withDriverName("org.postgresql.Driver")
-                .withUsername(getDatabaseUsername())
-                .withPassword(getDatabasePassword())
-                .build();
-
+        return new JdbcConnectionOptions.JdbcConnectionOptionsBuilder().withUrl(getDatabaseUrl()).withDriverName("org.postgresql.Driver").withUsername(getDatabaseUsername()).withPassword(getDatabasePassword()).build();
     }
 }

@@ -1,6 +1,7 @@
 package com.example;
 
 
+import com.example.util.ConfigLoader;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -17,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.example.util.ConfigLoader.getDatabasePassword;
 import static com.example.util.ConfigLoader.getDatabaseUrl;
@@ -24,6 +27,8 @@ import static com.example.util.ConfigLoader.getDatabaseUsername;
 import static com.example.util.TableUtil.*;
 
 public class FlinkPostgresTxtApp {
+
+    private static final Logger logger = LoggerFactory.getLogger(FlinkPostgresTxtApp.class);
 
     static Map<String, String> siksmMap = new HashMap<>();
     static List<String> subTable = new ArrayList<>();
@@ -62,19 +67,29 @@ public class FlinkPostgresTxtApp {
 
     public static void main(String[] args) throws Exception {
 
+        if (args.length < 3) {
+            logger.error("args.length  < 3");
+            return;
+        }
+        ConfigLoader.loadConfiguration(args[0]);
+
+        String folderPath = args[1];
+
+        String schema = args[2];
+
+
         // Set up the execution environment
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.enableCheckpointing();
         // Set the parallelism to 1 to ensure all data goes to a single file
         env.setParallelism(1);
-
-        String folderPath = "output";
 
         File folder = new File(folderPath);
         if (folder.exists()) {
             deleteFolder(folder);
-            System.out.println("Folder deleted successfully.");
+            logger.info("Folder deleted successfully.");
         } else {
-            System.out.println("Folder does not exist.");
+            logger.info("Folder does not exist.");
         }
 
         // Get all table names
@@ -83,7 +98,7 @@ public class FlinkPostgresTxtApp {
         // Process each table
         for (String tableName : tableNames.keySet()) {
             String code = tableNames.get(tableName);
-            Map<String, List<String>> columns = getColumns("xuexiaodingtest", tableName.toLowerCase());
+            Map<String, List<String>> columns = getColumns(schema, tableName.toLowerCase());
             List<String> colNames = columns.get("COL_NAMES");
             String colStr = colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null);
             if (subTable.contains(tableName)) {
@@ -98,7 +113,7 @@ public class FlinkPostgresTxtApp {
                     DataStream<Tuple1<String>> dataStream = env.addSource(sourceFunction);
                     String fileName = splitWhere[1].replace(".", "_").toUpperCase();
 
-                    dataStream.writeAsCsv("output/" + fileName + ".txt");
+                    dataStream.writeAsCsv(folderPath + File.separator + fileName + ".txt");
                 }
             } else {
                 if ("1".equals(code)) {
@@ -108,7 +123,7 @@ public class FlinkPostgresTxtApp {
                     // Add the source function to the execution environment
                     DataStream<Tuple1<String>> dataStream = env.addSource(sourceFunction);
 
-                    dataStream.writeAsCsv("output/RENDAYALL_" + tableName + ".txt");
+                    dataStream.writeAsCsv(folderPath + File.separator + "RENDAYALL_" + tableName + ".txt");
                 } else {
                     for (String siksmKey : siksmMap.keySet()) {
                         // Create a custom source function to read data from each table
@@ -118,17 +133,21 @@ public class FlinkPostgresTxtApp {
                         DataStream<Tuple1<String>> dataStream = env.addSource(sourceFunction);
                         // Set the parallelism to 1 to ensure all data goes to a single file
                         if (tableName.equalsIgnoreCase("KANFILD0")) {
-                            dataStream.writeAsCsv("output/RENBAK" + siksmKey + "_" + tableName + ".txt");
+                            dataStream.writeAsCsv(folderPath + File.separator + "RENBAK" + siksmKey + "_" + tableName + ".txt");
                         } else {
-                            dataStream.writeAsCsv("output/RENDAY" + siksmKey + "_" + tableName + ".txt");
+                            dataStream.writeAsCsv(folderPath + File.separator + "RENDAY" + siksmKey + "_" + tableName + ".txt");
                         }
                     }
                 }
             }
         }
 
+        logger.info("Flink FlinkPostgresTxtApp job started");
+
         // Execute the Flink job
         env.execute("Flink FlinkPostgresTxtApp Job");
+
+        logger.info("Flink FlinkPostgresTxtApp job finished");
     }
 
     private static Map<String, String> getAllTableNames() {

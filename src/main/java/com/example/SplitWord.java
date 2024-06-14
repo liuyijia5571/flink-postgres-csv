@@ -2,21 +2,28 @@ package com.example;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
 import static com.example.util.TableUtil.deleteFolder;
 
 
-public class splitWord {
+public class SplitWord {
+
+    private static final Logger logger = LoggerFactory.getLogger(SplitWord.class);
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("args length < 2");
+            logger.error("args length < 2");
             return;
         }
+
         // 设置执行环境
-        final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.enableCheckpointing();
         env.setParallelism(1);
 
         String filePath = args[0];
@@ -25,9 +32,9 @@ public class splitWord {
         File folder = new File(folderPath);
         if (folder.exists()) {
             deleteFolder(folder);
-            System.out.println("Folder deleted successfully.");
+            logger.info("Folder deleted successfully.");
         } else {
-            System.out.println("Folder does not exist.");
+            logger.info("Folder does not exist.");
         }
         // 读取文本文件
         String outFile = folderPath + File.separatorChar + "splitAddress.txt";
@@ -48,7 +55,12 @@ public class splitWord {
                     }
                 })
                 .writeAsText(outFile);
+
+        logger.info("Flink split job started");
+
         env.execute("flink split job");
+
+        logger.info("Flink split job finished");
 
     }
 
