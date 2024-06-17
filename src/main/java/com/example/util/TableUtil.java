@@ -71,7 +71,7 @@ public class TableUtil {
         sb.append(schema).append("' AND table_name = '");
         sb.append(tableName).append("'");
 
-        logger.info("执行sql：", sb);
+        logger.info("execute sql is {}", sb);
         ResultSet rs = stmt.executeQuery(sb.toString());
 
         while (rs.next()) {
@@ -87,10 +87,10 @@ public class TableUtil {
         if (isTruncate && !colNames.isEmpty()) {
             sb.setLength(0);
             sb.append("truncate table ").append(schema).append(".").append(tableName);
-            logger.info("执行sql：" + sb);
+            logger.info("execute sql is {}", sb);
             stmt.execute(sb.toString());
         }
-        if (colNames.isEmpty()) logger.error("数据库中没有表：", schema, ".", tableName);
+        if (colNames.isEmpty()) logger.error("database table is not found : schema is {},tableName is {}", schema, tableName);
         stmt.close();
         conn.close();
         return columnsMap;
@@ -98,13 +98,14 @@ public class TableUtil {
 
     public static void setPsData(int parameterIndex, String colName, String colClass, String dataValue, PreparedStatement ps, String tableName) throws SQLException {
         //character,numeric,character varying,timestamp without time zone
+
         switch (colClass) {
             case "numeric":
                 if (StringUtils.isNotBlank(dataValue)) {
                     try {
                         ps.setBigDecimal(parameterIndex, new BigDecimal(dataValue));
                     } catch (Exception e) {
-                        logger.error("表名：", tableName, ",字段是：", colName, " 值是：", dataValue);
+                        logger.error(" numeric error tableName: {} colName: {} dataValue: {} error is {}", tableName, colName, dataValue, e.getMessage());
                         ps.setBigDecimal(parameterIndex, new BigDecimal(0));
                     }
 
@@ -117,7 +118,7 @@ public class TableUtil {
                     try {
                         ps.setTimestamp(parameterIndex, Timestamp.valueOf(dataValue));
                     } catch (Exception e) {
-                        logger.error("表名：", tableName, "字段是：", colName, " 值是：", dataValue);
+                        logger.error("dataValue contains - tableName is {} colName is {} dataValue is {} error is {}", tableName, colName, dataValue, e.getMessage());
                         ps.setTimestamp(parameterIndex, timestampDate);
                     }
                 } else if (dataValue.indexOf("/") != -1) {
@@ -129,35 +130,40 @@ public class TableUtil {
                             Timestamp timestamp = new Timestamp(time);
                             ps.setTimestamp(parameterIndex, timestamp);
                         } else {
-                            logger.error("表名：", tableName, "字段是：", colName, " 值是：", dataValue);
+                            logger.error("tableName: {} colName: {} dataValue: {} ", tableName, colName, dataValue);
                             ps.setTimestamp(parameterIndex, timestampDate);
                         }
                     } catch (ParseException e) {
-                        logger.error("表名：", tableName, "字段是：", colName, " 值是：", dataValue);
+                        logger.error("dataValue contains /  tableName: {} colName: {} colName: {} error is {}", tableName, colName, dataValue, e.getMessage());
                         ps.setTimestamp(parameterIndex, timestampDate);
                     }
                 } else {
-                    // 计算天数部分和时间部分
-                    double excelDate = Double.parseDouble(dataValue);
-                    int days = (int) excelDate;
-                    double fraction = excelDate - days;
+                    try {
+                        // 计算天数部分和时间部分
+                        double excelDate = Double.parseDouble(dataValue);
+                        int days = (int) excelDate;
+                        double fraction = excelDate - days;
 
-                    // 基准日期
-                    LocalDate baseDate = LocalDate.of(1900, 1, 1).minusDays(2); // Excel dates start on 1900-01-01, but there is a bug considering 1900 as a leap year
+                        // 基准日期
+                        LocalDate baseDate = LocalDate.of(1900, 1, 1).minusDays(2); // Excel dates start on 1900-01-01, but there is a bug considering 1900 as a leap year
 
-                    // 计算日期
-                    LocalDate date = baseDate.plusDays(days);
+                        // 计算日期
+                        LocalDate date = baseDate.plusDays(days);
 
-                    // 计算时间
-                    long totalSecondsInDay = (long) (fraction * 24 * 60 * 60);
-                    LocalTime time = LocalTime.ofSecondOfDay(totalSecondsInDay);
+                        // 计算时间
+                        long totalSecondsInDay = (long) (fraction * 24 * 60 * 60);
+                        LocalTime time = LocalTime.ofSecondOfDay(totalSecondsInDay);
 
-                    // 合并日期和时间
-                    LocalDateTime dateTime = LocalDateTime.of(date, time);
+                        // 合并日期和时间
+                        LocalDateTime dateTime = LocalDateTime.of(date, time);
 
-                    // 转换为 Timestamp
-                    Timestamp timestamp = Timestamp.valueOf(dateTime);
-                    ps.setTimestamp(parameterIndex, timestamp);
+                        // 转换为 Timestamp
+                        Timestamp timestamp = Timestamp.valueOf(dateTime);
+                        ps.setTimestamp(parameterIndex, timestamp);
+                    } catch (Exception e) {
+                        logger.error("dataValue contains /  tableName: {} colName: {} colName: {} error is {}", tableName, colName, dataValue, e.getMessage());
+                        ps.setTimestamp(parameterIndex, timestampDate);
+                    }
                 }
                 break;
             default:

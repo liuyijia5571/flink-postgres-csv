@@ -25,7 +25,6 @@ public class CsvToPostgreSQL {
     public static void main(String[] args) throws Exception {
         // 创建流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing();
 //        env.setParallelism(1);
 
         if (args.length < 2) {
@@ -35,7 +34,7 @@ public class CsvToPostgreSQL {
 
         // CSV 文件路径
         String folderPath = args[0];
-        logger.info("txt path is ", folderPath);
+        logger.info("txt path is {}", folderPath);
 
         // 通过命令行参来选择配置文件
         String activeProfile = args[1];
@@ -46,7 +45,7 @@ public class CsvToPostgreSQL {
                 isTruncate = true;
             }
         }
-        logger.info("truncate is ", isTruncate);
+        logger.info("truncate is {}", isTruncate);
 
         ConfigLoader.loadConfiguration(activeProfile);
 
@@ -72,7 +71,7 @@ public class CsvToPostgreSQL {
                                 continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 
-                            logger.info(insertSql);
+                            logger.info("insertSql is {}",insertSql);
                             // 读取 CSV 文件并创建 DataStream
                             DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
                             // 将数据写入 PostgreSQL 数据库

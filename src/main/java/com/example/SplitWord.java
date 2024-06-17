@@ -23,7 +23,6 @@ public class SplitWord {
 
         // 设置执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing();
         env.setParallelism(1);
 
         String filePath = args[0];

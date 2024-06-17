@@ -30,7 +30,6 @@ public class TxtToPostgreSQL {
         }
         // 创建流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing();
 
         // 通过命令行参来选择配置文件
         String activeProfile = args[0];
@@ -41,12 +40,12 @@ public class TxtToPostgreSQL {
                 isTruncate = true;
             }
         }
-        logger.info("truncate is ", isTruncate);
+        logger.info("truncate is {}", isTruncate);
         // CSV 文件路径
 
         String folderPath = args[1];
 
-        logger.info("txt path is ", folderPath);
+        logger.info("txt path is {}", folderPath);
 
         ConfigLoader.loadConfiguration(activeProfile);
 
@@ -78,7 +77,7 @@ public class TxtToPostgreSQL {
                             sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").
                                     append(schemaName).append(".").append(tableName).append(" ;\n");
 
-                            logger.info(insertSql);
+                            logger.info("insertSql is {}", insertSql);
                             // 读取 CSV 文件并创建 DataStream
                             DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
                             // 将数据写入 PostgreSQL 数据库
@@ -88,8 +87,40 @@ public class TxtToPostgreSQL {
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
-                                            setPsData(i + 1, colName, colClass, datas[i], ps, flieName);
+                                            if (colName.equalsIgnoreCase("insert_job_id") ||
+                                                    colName.equalsIgnoreCase("insert_pro_id") ||
+                                                    colName.equalsIgnoreCase("upd_user_id") ||
+                                                    colName.equalsIgnoreCase("upd_job_id") ||
+                                                    colName.equalsIgnoreCase("upd_pro_id")
+                                            ) {
+                                                if (datas.length > i) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, flieName);
+                                                } else {
+                                                    setPsData(i + 1, colName, colClass, "", ps, flieName);
+                                                }
 
+                                            } else if (colName.equalsIgnoreCase("insert_user_id") ||
+                                                    colName.equalsIgnoreCase("partition_flag")
+                                            ) {
+                                                if (datas.length > i) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, flieName);
+                                                } else {
+                                                    setPsData(i + 1, colName, colClass, tableName.toUpperCase(), ps, flieName);
+                                                }
+                                            } else if (colName.equalsIgnoreCase("upd_sys_date") ||
+                                                    colName.equalsIgnoreCase("insert_sys_date")) {
+                                                if (datas.length > i) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, flieName);
+                                                } else {
+                                                    setPsData(i + 1, colName, colClass, "1990-01-01 00:00:00", ps, flieName);
+                                                }
+                                            } else {
+                                                if (i < datas.length) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
+                                                } else {
+                                                    setPsData(i + 1, colName, colClass, "", ps, flieName);
+                                                }
+                                            }
                                         }
                                     }, jdbcExecutionOptions, getConnectionOptions()
                             ));
@@ -98,7 +129,7 @@ public class TxtToPostgreSQL {
                 }
             }
         }
-        logger.info(sb.toString());
+        logger.info("sql is {}", sb);
 
         // 执行流处理
         logger.info("Flink TxtToPostgreSQL job started");

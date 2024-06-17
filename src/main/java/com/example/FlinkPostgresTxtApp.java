@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +81,6 @@ public class FlinkPostgresTxtApp {
 
         // Set up the execution environment
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing();
         // Set the parallelism to 1 to ensure all data goes to a single file
         env.setParallelism(1);
 
@@ -270,7 +270,7 @@ public class FlinkPostgresTxtApp {
                 sbSql.append(" where ").append(whereStr);
             }
             String sql = sbSql.toString();
-            System.out.println("执行的sql：" + sql);
+            logger.info("execute sql is {}", sql);
             ResultSet rs = stmt.executeQuery(sql);
 
             int columnCount = rs.getMetaData().getColumnCount();

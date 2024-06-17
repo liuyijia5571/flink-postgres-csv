@@ -23,10 +23,10 @@ public class ConfigLoader {
 
     public static void loadConfiguration(String profile) {
         try {
-            logger.info("profile is ", CONFIG_FILE_PREFIX, profile, CONFIG_FILE_SUFFIX);
+            logger.info("profile is {}", CONFIG_FILE_PREFIX + profile + CONFIG_FILE_SUFFIX);
             config = new PropertiesConfiguration(CONFIG_FILE_PREFIX + profile + CONFIG_FILE_SUFFIX);
         } catch (ConfigurationException e) {
-            logger.error(e.getMessage());
+            logger.error("error message is {}", e.getMessage());
             throw new RuntimeException("Failed to load configuration file " + CONFIG_FILE_PREFIX + profile + CONFIG_FILE_SUFFIX);
         }
     }
