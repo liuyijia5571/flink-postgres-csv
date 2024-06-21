@@ -47,7 +47,7 @@ public class TableUtil {
     }
 
     public static String getInsertSql(List<String> colNames, String schemaName, String tableName) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         String colStr = colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null);
         sb.append("INSERT INTO ").append(schemaName).append(".").append(tableName).append("(");
         sb.append(colStr);
@@ -67,9 +67,9 @@ public class TableUtil {
         StringBuffer sb = new StringBuffer();
         sb.append("SELECT column_name, data_type ");
         sb.append("FROM information_schema.columns ");
-        sb.append("WHERE table_schema = '");
-        sb.append(schema).append("' AND table_name = '");
-        sb.append(tableName).append("'");
+        sb.append("WHERE table_schema ilike '");
+        sb.append(schema).append("' AND table_name ilike '");
+        sb.append(tableName).append("' order by ordinal_position");
 
         logger.info("execute sql is {}", sb);
         ResultSet rs = stmt.executeQuery(sb.toString());
@@ -114,14 +114,14 @@ public class TableUtil {
                 }
                 break;
             case "timestamp without time zone":
-                if (dataValue.indexOf("-") != -1) {
+                if (dataValue.contains("-")) {
                     try {
                         ps.setTimestamp(parameterIndex, Timestamp.valueOf(dataValue));
                     } catch (Exception e) {
                         logger.error("dataValue contains - tableName is {} colName is {} dataValue is {} error is {}", tableName, colName, dataValue, e.getMessage());
                         ps.setTimestamp(parameterIndex, timestampDate);
                     }
-                } else if (dataValue.indexOf("/") != -1) {
+                } else if (dataValue.contains("/")) {
                     try {
                         String determineDateFormat = determineDateFormat(dataValue, possibleFormats);
                         if (!"未知格式".equals(determineDateFormat)) {
@@ -167,7 +167,7 @@ public class TableUtil {
                 }
                 break;
             default:
-                ps.setString(parameterIndex, dataValue);
+                ps.setString(parameterIndex, dataValue.trim());
                 break;
         }
     }

@@ -65,9 +65,7 @@ public class TxtToPostgreSQL {
                             String tableName = tableNameArr[1].split("\\.")[0].toLowerCase();
 
                             Map<String, List<String>> columns;
-
                             columns = getColumns(schemaName, tableName, isTruncate);
-
                             List<String> colClasses = columns.get("COL_CLASS");
                             List<String> colNames = columns.get("COL_NAMES");
                             if (colNames.isEmpty())
@@ -128,14 +126,14 @@ public class TxtToPostgreSQL {
                     }
                 }
             }
+            // 执行流处理
+            logger.info("Flink TxtToPostgreSQL job started");
+
+            env.execute("TxtToPostgreSQL" + System.currentTimeMillis());
+
+            logger.info("Flink TxtToPostgreSQL job finished");
         }
         logger.info("sql is {}", sb);
 
-        // 执行流处理
-        logger.info("Flink TxtToPostgreSQL job started");
-
-        env.execute("TxtToPostgreSQL ");
-
-        logger.info("Flink TxtToPostgreSQL job finished");
     }
 }

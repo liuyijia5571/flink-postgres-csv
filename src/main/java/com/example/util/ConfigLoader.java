@@ -12,6 +12,7 @@ public class ConfigLoader {
     private static final String CONFIG_FILE_PREFIX = "application-";
     private static final String CONFIG_FILE_SUFFIX = ".properties";
 
+
     public static final String TEST05 = "test05";
 
     private static PropertiesConfiguration config;
@@ -19,6 +20,15 @@ public class ConfigLoader {
     static {
         // 默认加载开发环境配置
         loadConfiguration("dev");
+    }
+
+    static {
+        try {
+            logger.info("Class.forName(org.postgresql.Driver)");
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Failed to load org.postgresql.Driver");
+        }
     }
 
     public static void loadConfiguration(String profile) {
@@ -42,4 +52,5 @@ public class ConfigLoader {
     public static String getDatabasePassword() {
         return config.getString("database.password");
     }
+
 }

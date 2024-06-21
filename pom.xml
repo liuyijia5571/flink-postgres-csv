@@ -1,39 +1,4 @@
-<!DOCTYPE project [
-        <!ELEMENT project (modelVersion|groupId|artifactId|version|properties|dependencies|build)*>
-        <!ATTLIST project
-                xmlns CDATA #REQUIRED
-                xmlns:xsi CDATA #REQUIRED
-                xsi:schemaLocation CDATA #REQUIRED>
-        <!ELEMENT modelVersion (#PCDATA)>
-        <!ELEMENT groupId (#PCDATA)>
-        <!ELEMENT artifactId (#PCDATA)>
-        <!ELEMENT version (#PCDATA)>
-        <!ELEMENT properties (maven.compiler.source|maven.compiler.target|flink.version|scala.binary.version)*>
-        <!ELEMENT maven.compiler.source (#PCDATA)>
-        <!ELEMENT maven.compiler.target (#PCDATA)>
-        <!ELEMENT flink.version (#PCDATA)>
-        <!ELEMENT scala.binary.version (#PCDATA)>
-        <!ELEMENT dependencies (dependency)*>
-        <!ELEMENT dependency (groupId|artifactId|version|scope)*>
-        <!ELEMENT scope (#PCDATA)>
-        <!ELEMENT build (plugins)*>
-        <!ELEMENT plugins (plugin)*>
-        <!ELEMENT plugin (groupId|artifactId|version|configuration|executions)*>
-        <!ELEMENT configuration (source|target|transformers)*>
-        <!ELEMENT source (#PCDATA)>
-        <!ELEMENT target (#PCDATA)>
-        <!ELEMENT executions (execution)*>
-        <!ELEMENT execution (phase|goals|configuration)*>
-        <!ELEMENT phase (#PCDATA)>
-        <!ELEMENT goals (goal)*>
-        <!ELEMENT goal (#PCDATA)>
-        <!ELEMENT transformers (transformer)*>
-        <!ELEMENT transformer (mainClass)*>
-        <!ATTLIST transformer
-                implementation CDATA #REQUIRED>
-        <!ELEMENT mainClass (#PCDATA)>
-        ]>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -113,7 +78,6 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.2.3</version>
-      <!-- 请根据需要替换为最新版本 -->
     </dependency>
 
   </dependencies>
@@ -142,7 +106,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.example.SplitWord</mainClass>
+                  <mainClass>com.example.PostgresTxt1App</mainClass>
                 </transformer>
               </transformers>
             </configuration>

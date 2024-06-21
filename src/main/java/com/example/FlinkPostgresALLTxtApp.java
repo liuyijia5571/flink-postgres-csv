@@ -20,7 +20,8 @@ import static com.example.util.ConfigLoader.TEST05;
 import static com.example.util.ConfigLoader.getDatabasePassword;
 import static com.example.util.ConfigLoader.getDatabaseUrl;
 import static com.example.util.ConfigLoader.getDatabaseUsername;
-import static com.example.util.TableUtil.*;
+import static com.example.util.TableUtil.deleteFolder;
+import static com.example.util.TableUtil.getColumns;
 
 public class FlinkPostgresALLTxtApp {
 

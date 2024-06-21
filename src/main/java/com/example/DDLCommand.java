@@ -18,9 +18,9 @@ public class DDLCommand {
             return;
         }
 
-        ConfigLoader.loadConfiguration(args[1]);
+        ConfigLoader.loadConfiguration(args[0]);
 
-        String folderPath = args[0];
+        String folderPath = args[1];
         File folder = new File(folderPath);
         if (folder.exists()) {
             File[] files = folder.listFiles();

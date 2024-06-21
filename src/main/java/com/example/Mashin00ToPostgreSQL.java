@@ -11,7 +11,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import static com.example.util.TableUtil.*;
+import static com.example.util.TableUtil.getColumns;
+import static com.example.util.TableUtil.getConnectionOptions;
+import static com.example.util.TableUtil.getInsertSql;
+import static com.example.util.TableUtil.jdbcExecutionOptions;
 
 public class Mashin00ToPostgreSQL {
 
@@ -30,7 +33,6 @@ public class Mashin00ToPostgreSQL {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         //设置并行数
 //        env.setParallelism(1);
-
         Map<String, List<String>> columns = getColumns(schemaName, tableName, true);
         List<String> colNames = columns.get("COL_NAMES");
         List<String> colClasses = columns.get("COL_CLASS");

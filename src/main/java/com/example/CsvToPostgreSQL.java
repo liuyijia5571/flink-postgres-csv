@@ -32,12 +32,14 @@ public class CsvToPostgreSQL {
             return;
         }
 
-        // CSV 文件路径
-        String folderPath = args[0];
-        logger.info("txt path is {}", folderPath);
+
 
         // 通过命令行参来选择配置文件
-        String activeProfile = args[1];
+        String activeProfile = args[0];
+
+        // CSV 文件路径
+        String folderPath = args[1];
+        logger.info("txt path is {}", folderPath);
 
         boolean isTruncate = false;
         if (args.length > 2) {
@@ -81,8 +83,15 @@ public class CsvToPostgreSQL {
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
-                                            setPsData(i + 1, colName, colClass, datas[i], ps, flieName);
-
+                                            if (i < datas.length) {
+                                                setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
+                                            } else {
+                                                if("partition_flag".equalsIgnoreCase(colName)){
+                                                    setPsData(i + 1, colName, colClass, tableName, ps, tableName);
+                                                }else{
+                                                    setPsData(i + 1, colName, colClass, "", ps, tableName);
+                                                }
+                                            }
                                         }
                                     }, jdbcExecutionOptions, getConnectionOptions()
                             ));
@@ -93,7 +102,7 @@ public class CsvToPostgreSQL {
         }
         logger.info("Flink CsvToPostgreSQL job started");
         // 执行流处理
-        env.execute("Flink CsvToPostgreSQL ");
+        env.execute("Flink CsvToPostgreSQL " + System.currentTimeMillis());
 
         logger.info("Flink CsvToPostgreSQL job finished");
     }
