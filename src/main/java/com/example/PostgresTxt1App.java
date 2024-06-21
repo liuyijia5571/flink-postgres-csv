@@ -243,7 +243,7 @@ public class PostgresTxt1App {
         return tableNames;
     }
 
-    private static String getSelectSql(String tableName, String code, String sikmValue, String schema, String whereStr, Map<String, List<String>> columns) throws Exception {
+    private static String getSelectSql(String tableName, String code, String sikmValue, String schema, String whereStr, Map<String, List<String>> columns) {
         StringBuilder sbSql = new StringBuilder();
         List<String> colNames = columns.get("COL_NAMES");
         if (colNames.isEmpty()) {
@@ -262,7 +262,7 @@ public class PostgresTxt1App {
         }
     }
 
-    public static RowTypeInfo getRowTypeInfo(Map<String, List<String>> columns) throws SQLException {
+    public static RowTypeInfo getRowTypeInfo(Map<String, List<String>> columns)  {
         List<TypeInformation<?>> typeInformationList = new ArrayList<>();
         List<String> fieldNames = new ArrayList<>();
         List<String> colName = columns.get("COL_NAMES");
