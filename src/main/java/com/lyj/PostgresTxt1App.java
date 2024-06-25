@@ -1,8 +1,6 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
-import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.operators.DataSource;
@@ -175,7 +173,7 @@ public class PostgresTxt1App {
 
     }
 
-    private static void saveFile(ExecutionEnvironment env, Map<String, List<String>> columns, String sql, String filePath) throws Exception {
+    private static void saveFile(ExecutionEnvironment env, Map<String, List<String>> columns, String sql, String filePath) {
         RowTypeInfo rowTypeInfo = getRowTypeInfo(columns);
         JdbcInputFormat jdbcInputFormat = JdbcInputFormat.buildJdbcInputFormat()
                 .setDrivername("org.postgresql.Driver")

@@ -47,9 +47,9 @@ public class TxtToPostgreSQL {
         String isTruncateStr = params.get("is_truncate", "false");
 
         boolean isTruncate = false;
-        if ("true".equalsIgnoreCase(isTruncateStr)) {
+        if ("true".equalsIgnoreCase(isTruncateStr))
             isTruncate = true;
-        }
+
         logger.info("truncate is {}", isTruncate);
 
         ConfigLoader.loadConfiguration(activeProfile);

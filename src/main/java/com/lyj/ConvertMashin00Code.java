@@ -163,7 +163,7 @@ public class ConvertMashin00Code {
         //写入未配对的数据
         DataSet<Tuple5> rightData = resultData.filter(tuple3 -> "right".equals(tuple3.f0)).map(new MapFunction<Tuple3, Tuple5>() {
             @Override
-            public Tuple5 map(Tuple3 tuple3) throws Exception {
+            public Tuple5 map(Tuple3 tuple3) {
                 return (Tuple5) tuple3.f2;
             }
         }).returns(TUPLE(csvTypes));
@@ -180,7 +180,7 @@ public class ConvertMashin00Code {
             private long counter = 0;
 
             @Override
-            public Row map(Tuple3 tuple3) throws Exception {
+            public Row map(Tuple3 tuple3) {
                 counter++;
                 long seqNum = maxSeq + counter;
                 Row insertData = new Row(9);
@@ -219,7 +219,7 @@ public class ConvertMashin00Code {
      * @param schema
      * @param folderPath
      * @param resultPath
-     * @return
+     * @return checkParams
      */
     private static boolean checkParams(String activeProfile, String schema, String folderPath, String resultPath) {
         if (activeProfile == null) {

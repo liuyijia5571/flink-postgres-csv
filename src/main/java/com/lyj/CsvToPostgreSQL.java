@@ -47,13 +47,11 @@ public class CsvToPostgreSQL {
         String isTruncateStr = params.get("is_truncate", "false");
 
         boolean isTruncate = false;
-        if ("true".equalsIgnoreCase(isTruncateStr)) {
+        if ("true".equalsIgnoreCase(isTruncateStr))
             isTruncate = true;
-        }
         logger.info("truncate is {}", isTruncate);
 
         ConfigLoader.loadConfiguration(activeProfile);
-
         // 创建流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);

@@ -19,7 +19,6 @@ import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 
-import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.ConfigLoader.getDatabasePassword;
 import static com.lyj.util.ConfigLoader.getDatabaseUrl;
 import static com.lyj.util.ConfigLoader.getDatabaseUsername;
@@ -156,7 +155,7 @@ public class PostgresDB1toDB2App {
             logger.error("new_db_profile is null!");
             return false;
         }
-        return false;
+        return true;
     }
 
 
