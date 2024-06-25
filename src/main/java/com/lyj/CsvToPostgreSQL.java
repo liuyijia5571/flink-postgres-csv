@@ -1,6 +1,7 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.getConnectionOptions;
 import static com.lyj.util.TableUtil.getInsertSql;
@@ -23,33 +25,41 @@ public class CsvToPostgreSQL {
     private static final Logger logger = LoggerFactory.getLogger(CsvToPostgreSQL.class);
 
     public static void main(String[] args) throws Exception {
-        // 创建流执行环境
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-//        env.setParallelism(1);
 
-        if (args.length < 2) {
-            System.err.println("args.length  < 2");
+        final ParameterTool params = ParameterTool.fromArgs(args);
+
+        // 通过命令行参来选择配置文件
+        String activeProfile = params.get(DB_PROFILE);
+
+        // CSV 文件路径
+        String folderPath = params.get("txt_path");
+
+        boolean checkParamsResult = checkParams(activeProfile, folderPath);
+        if (!checkParamsResult) {
+            logger.error("params demo : " +
+                    "--db_profile dev43  \n" +
+                    "--txt_path C:\\青果\\Data_Result\\sql\\data  \n" +
+                    "--is_truncate true  ");
             return;
         }
 
-
-
-        // 通过命令行参来选择配置文件
-        String activeProfile = args[0];
-
-        // CSV 文件路径
-        String folderPath = args[1];
-        logger.info("txt path is {}", folderPath);
+        //是否清空表
+        String isTruncateStr = params.get("is_truncate", "false");
 
         boolean isTruncate = false;
-        if (args.length > 2) {
-            if ("true".equalsIgnoreCase(args[2])) {
-                isTruncate = true;
-            }
+        if ("true".equalsIgnoreCase(isTruncateStr)) {
+            isTruncate = true;
         }
         logger.info("truncate is {}", isTruncate);
 
         ConfigLoader.loadConfiguration(activeProfile);
+
+        // 创建流执行环境
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+
+        env.getConfig().setGlobalJobParameters(params);
+
 
         File folder = new File(folderPath);
         if (folder.exists()) {
@@ -73,7 +83,7 @@ public class CsvToPostgreSQL {
                                 continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 
-                            logger.info("insertSql is {}",insertSql);
+                            logger.info("insertSql is {}", insertSql);
                             // 读取 CSV 文件并创建 DataStream
                             DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
                             // 将数据写入 PostgreSQL 数据库
@@ -86,9 +96,9 @@ public class CsvToPostgreSQL {
                                             if (i < datas.length) {
                                                 setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
                                             } else {
-                                                if("partition_flag".equalsIgnoreCase(colName)){
+                                                if ("partition_flag".equalsIgnoreCase(colName)) {
                                                     setPsData(i + 1, colName, colClass, tableName, ps, tableName);
-                                                }else{
+                                                } else {
                                                     setPsData(i + 1, colName, colClass, "", ps, tableName);
                                                 }
                                             }
@@ -105,5 +115,24 @@ public class CsvToPostgreSQL {
         env.execute("Flink CsvToPostgreSQL " + System.currentTimeMillis());
 
         logger.info("Flink CsvToPostgreSQL job finished");
+    }
+
+    private static boolean checkParams(String activeProfile, String folderPath) {
+        if (activeProfile == null) {
+            logger.error("db_profile is null!");
+            return false;
+        }
+
+        if (folderPath == null) {
+            logger.error("csv_path is null!");
+            return false;
+        }
+        File resultFile = new File(folderPath);
+
+        if (!resultFile.isDirectory()) {
+            logger.error("csv_path is not directory");
+            return false;
+        }
+        return true;
     }
 }

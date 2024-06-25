@@ -2,6 +2,7 @@ package com.lyj;
 
 import com.lyj.util.ConfigLoader;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcInputFormat;
 import org.apache.flink.connector.jdbc.JdbcSink;
@@ -18,12 +19,13 @@ import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 
-import static com.lyj.PostgresTxt1App.getRowTypeInfo;
+import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.ConfigLoader.getDatabasePassword;
 import static com.lyj.util.ConfigLoader.getDatabaseUrl;
 import static com.lyj.util.ConfigLoader.getDatabaseUsername;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.getInsertSql;
+import static com.lyj.util.TableUtil.getRowTypeInfo;
 import static com.lyj.util.TableUtil.jdbcExecutionOptions;
 import static com.lyj.util.TableUtil.setPsData;
 
@@ -33,24 +35,38 @@ public class PostgresDB1toDB2App {
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length < 3) {
-            logger.error("args.length  < 2");
+        final ParameterTool params = org.apache.flink.api.java.utils.ParameterTool.fromArgs(args);
+
+        // 通过命令行参来选择配置文件
+        String oidActiveProfile = params.get("oid_db_profile");
+
+        // CSV 文件路径
+        String newActiveProfile = params.get("new_db_profile");
+
+        boolean checkParamsResult = checkParams(oidActiveProfile, newActiveProfile);
+        if (!checkParamsResult) {
+            logger.error("params demo : " +
+                    "--oid_db_profile dev43  \n" +
+                    "--new_db_profile dev82  \n" +
+                    "--is_truncate true  ");
             return;
         }
+
+        //是否清空表
+        String isTruncateStr = params.get("is_truncate", "false");
+
         boolean isTruncate = false;
-        if (args.length > 3) {
-            if ("true".equalsIgnoreCase(args[3])) {
-                isTruncate = true;
-            }
+        if ("true".equalsIgnoreCase(isTruncateStr)) {
+            isTruncate = true;
         }
         logger.info("truncate is {}", isTruncate);
 
-        ConfigLoader.loadConfiguration(args[0]);
+        ConfigLoader.loadConfiguration(oidActiveProfile);
         String oldDatabaseUrl = getDatabaseUrl();
         String oldDatabaseUsername = getDatabaseUsername();
         String oldDatabasePassword = getDatabasePassword();
 
-        ConfigLoader.loadConfiguration(args[1]);
+        ConfigLoader.loadConfiguration(newActiveProfile);
 
         JdbcConnectionOptions connectionOptions = new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
                 .withDriverName("org.postgresql.Driver")
@@ -127,6 +143,20 @@ public class PostgresDB1toDB2App {
         // 执行任务
         env.execute(PostgresDB1toDB2App.class.getName() + System.currentTimeMillis());
 
+    }
+
+    private static boolean checkParams(String oidActiveProfile, String newActiveProfile) {
+
+        if (oidActiveProfile == null) {
+            logger.error("oid_db_profile is null!");
+            return false;
+        }
+
+        if (newActiveProfile == null) {
+            logger.error("new_db_profile is null!");
+            return false;
+        }
+        return false;
     }
 
 

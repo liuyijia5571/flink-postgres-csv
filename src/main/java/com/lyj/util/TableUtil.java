@@ -1,6 +1,9 @@
 package com.lyj.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
 import org.slf4j.Logger;
@@ -15,6 +18,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -48,7 +52,7 @@ public class TableUtil {
 
     public static String getInsertSql(List<String> colNames, String schemaName, String tableName) {
         StringBuilder sb = new StringBuilder();
-        String colStr = colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null);
+        String colStr = colNames.stream().map(u->"\""+u+"\"").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
         sb.append("INSERT INTO ").append(schemaName).append(".").append(tableName).append("(");
         sb.append(colStr);
         sb.append(") VALUES (");
@@ -90,10 +94,28 @@ public class TableUtil {
             logger.info("execute sql is {}", sb);
             stmt.execute(sb.toString());
         }
-        if (colNames.isEmpty()) logger.error("database table is not found : schema is {},tableName is {}", schema, tableName);
+        if (colNames.isEmpty())
+            logger.error("database table is not found : schema is {},tableName is {}", schema, tableName);
         stmt.close();
         conn.close();
         return columnsMap;
+    }
+
+    public static int getMaxSeq(String schema, String tableName, String seqCol) throws SQLException {
+        Connection conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
+        Statement stmt = conn.createStatement();
+        StringBuffer sb = new StringBuffer();
+        sb.append("SELECT max( \"").append(seqCol).append("\")");
+        sb.append(" FROM  ").append(schema).append(".").append(tableName);
+        logger.info("execute select sql is {}", sb);
+        ResultSet rs = stmt.executeQuery(sb.toString());
+        int maxSeq = 0;
+        if (rs.next()) {
+            maxSeq = rs.getInt(1);
+        }
+        rs.close();
+        conn.close();
+        return maxSeq;
     }
 
     public static void setPsData(int parameterIndex, String colName, String colClass, String dataValue, PreparedStatement ps, String tableName) throws SQLException {
@@ -220,5 +242,56 @@ public class TableUtil {
 
     public static JdbcConnectionOptions getConnectionOptions() {
         return new JdbcConnectionOptions.JdbcConnectionOptionsBuilder().withUrl(getDatabaseUrl()).withDriverName("org.postgresql.Driver").withUsername(getDatabaseUsername()).withPassword(getDatabasePassword()).build();
+    }
+
+    public static RowTypeInfo getRowTypeInfo(Map<String, List<String>> columns) {
+        List<TypeInformation<?>> typeInformationList = new ArrayList<>();
+        List<String> fieldNames = new ArrayList<>();
+        List<String> colName = columns.get("COL_NAMES");
+        List<String> colClass = columns.get("COL_CLASS");
+        for (int i = 0; i < colName.size(); i++) {
+            String columnName = colName.get(i);
+            fieldNames.add(columnName);
+
+            String columnType = colClass.get(i);
+            switch (columnType) {
+                case "numeric":
+                    typeInformationList.add(BasicTypeInfo.BIG_DEC_TYPE_INFO);
+                    break;
+                case "timestamp without time zone":
+                    typeInformationList.add(BasicTypeInfo.DATE_TYPE_INFO);
+                    break;
+                // Add more types as needed
+                default:
+                    typeInformationList.add(BasicTypeInfo.STRING_TYPE_INFO);
+                    break;
+            }
+
+        }
+        TypeInformation<?>[] types = typeInformationList.toArray(new TypeInformation[0]);
+        String[] names = fieldNames.toArray(new String[0]);
+        return new RowTypeInfo(types, names);
+    }
+
+    public static int[] getSqlTypes(Map<String, List<String>> columns) {
+        List<String> colClass = columns.get("COL_CLASS");
+        int[] sqlTypes = new int[colClass.size()];
+        for (int i = 0; i < colClass.size(); i++) {
+            String columnType = colClass.get(i);
+            switch (columnType) {
+                case "numeric":
+                    sqlTypes[i] = Types.NUMERIC;
+                    break;
+                case "timestamp without time zone":
+                    sqlTypes[i] = Types.DATE;
+                    break;
+                default:
+                    sqlTypes[i] = Types.VARCHAR;
+                    break;
+            }
+
+        }
+
+        return sqlTypes;
     }
 }

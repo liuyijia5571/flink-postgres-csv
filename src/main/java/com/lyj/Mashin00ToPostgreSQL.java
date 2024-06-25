@@ -16,10 +16,14 @@ import static com.lyj.util.TableUtil.getConnectionOptions;
 import static com.lyj.util.TableUtil.getInsertSql;
 import static com.lyj.util.TableUtil.jdbcExecutionOptions;
 
+/**
+ * data导入postgresql
+ */
 public class Mashin00ToPostgreSQL {
 
 
     public static void main(String[] args) throws Exception {
+
         if (args.length < 2) {
             System.err.println("args size < 2");
             System.exit(0);

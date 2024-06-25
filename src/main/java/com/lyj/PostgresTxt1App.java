@@ -7,6 +7,7 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.jdbc.JdbcInputFormat;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.types.Row;
@@ -20,10 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.ConfigLoader.getDatabasePassword;
 import static com.lyj.util.ConfigLoader.getDatabaseUrl;
 import static com.lyj.util.ConfigLoader.getDatabaseUsername;
 import static com.lyj.util.TableUtil.getColumns;
+import static com.lyj.util.TableUtil.getRowTypeInfo;
 
 public class PostgresTxt1App {
 
@@ -65,19 +68,26 @@ public class PostgresTxt1App {
     }
 
     public static void main(String[] args) throws Exception {
+        final ParameterTool params = ParameterTool.fromArgs(args);
 
-        if (args.length < 3) {
-            logger.error("args.length  < 3");
+        // 通过命令行参来选择配置文件
+        String activeProfile = params.get(DB_PROFILE);
+
+        // CSV 文件路径
+        String folderPath = params.get("output_path");
+
+        String schema = params.get("schema");
+
+        boolean checkParamsResult = checkParams(activeProfile,schema, folderPath);
+        if (!checkParamsResult) {
+            logger.error("params demo : " +
+                    "--db_profile dev43 \n" +
+                    "--output_path C:\\flink\\job\\output \n" +
+                    "--schema xuexiaodingtest ");
             return;
         }
 
-
-
-        ConfigLoader.loadConfiguration(args[0]);
-
-        String folderPath = args[1];
-
-        String schema = args[2];
+        ConfigLoader.loadConfiguration(activeProfile);
 
         // Set up the execution environment
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
@@ -85,12 +95,38 @@ public class PostgresTxt1App {
         // Set the parallelism to 1 to ensure all data goes to a single file
         env.setParallelism(1);
 
+        env.getConfig().setGlobalJobParameters(params);
+
         // Get all table names
         Map<String, String> tableNames = getAllTableNames();
 
         extracted(tableNames, schema, env, folderPath);
+
         env.execute(PostgresTxt1App.class.getName() + System.currentTimeMillis());
 
+    }
+
+    public static boolean checkParams(String activeProfile, String schema, String folderPath) {
+        if (activeProfile == null) {
+            logger.error("db_profile is null!");
+            return false;
+        }
+
+        if (schema == null) {
+            logger.error("schema is null!");
+            return false;
+        }
+        if (folderPath == null) {
+            logger.error("output_path is null!");
+            return false;
+        }
+        File resultFile = new File(folderPath);
+
+        if (!resultFile.isDirectory()) {
+            logger.error("output_path is not directory");
+            return false;
+        }
+        return true;
     }
 
     public static void extracted(Map<String, String> tableNames, String schema, ExecutionEnvironment env, String folderPath) throws Exception {
@@ -261,32 +297,5 @@ public class PostgresTxt1App {
         }
     }
 
-    public static RowTypeInfo getRowTypeInfo(Map<String, List<String>> columns)  {
-        List<TypeInformation<?>> typeInformationList = new ArrayList<>();
-        List<String> fieldNames = new ArrayList<>();
-        List<String> colName = columns.get("COL_NAMES");
-        List<String> colClass = columns.get("COL_CLASS");
-        for (int i = 0; i < colName.size(); i++) {
-            String columnName = colName.get(i);
-            fieldNames.add(columnName);
 
-            String columnType = colClass.get(i);
-            switch (columnType) {
-                case "numeric":
-                    typeInformationList.add(BasicTypeInfo.BIG_DEC_TYPE_INFO);
-                    break;
-                case "timestamp without time zone":
-                    typeInformationList.add(BasicTypeInfo.DATE_TYPE_INFO);
-                    break;
-                // Add more types as needed
-                default:
-                    typeInformationList.add(BasicTypeInfo.STRING_TYPE_INFO);
-                    break;
-            }
-
-        }
-        TypeInformation<?>[] types = typeInformationList.toArray(new TypeInformation[0]);
-        String[] names = fieldNames.toArray(new String[0]);
-        return new RowTypeInfo(types, names);
-    }
 }

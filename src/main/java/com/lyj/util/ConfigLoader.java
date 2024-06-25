@@ -12,6 +12,8 @@ public class ConfigLoader {
     private static final String CONFIG_FILE_PREFIX = "application-";
     private static final String CONFIG_FILE_SUFFIX = ".properties";
 
+    public static final String DB_PROFILE = "db_profile";
+
 
     public static final String TEST05 = "test05";
 
