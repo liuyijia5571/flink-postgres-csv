@@ -44,11 +44,8 @@ public class TxtToPostgreSQL {
         }
 
         //是否清空表
-        String isTruncateStr = params.get("is_truncate", "false");
+        boolean isTruncate= params.getBoolean("is_truncate", false);
 
-        boolean isTruncate = false;
-        if ("true".equalsIgnoreCase(isTruncateStr))
-            isTruncate = true;
         logger.info("truncate is {}", isTruncate);
 
         ConfigLoader.loadConfiguration(activeProfile);

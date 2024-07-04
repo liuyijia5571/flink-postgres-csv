@@ -213,14 +213,6 @@ public class ConvertMashin00Code {
         env.execute(ConvertMashin00Code.class.getName() + System.currentTimeMillis());
     }
 
-    /**
-     * 检查参数
-     * @param activeProfile
-     * @param schema
-     * @param folderPath
-     * @param resultPath
-     * @return checkParams
-     */
     private static boolean checkParams(String activeProfile, String schema, String folderPath, String resultPath) {
         if (activeProfile == null) {
             logger.error("db_profile is null!");
