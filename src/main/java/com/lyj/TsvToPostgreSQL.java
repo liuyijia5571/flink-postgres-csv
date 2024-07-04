@@ -20,15 +20,15 @@ import static com.lyj.util.TableUtil.jdbcExecutionOptions;
 import static com.lyj.util.TableUtil.setPsData;
 
 
-public class CsvToPostgreSQL {
+public class TsvToPostgreSQL {
 
-    private static final Logger logger = LoggerFactory.getLogger(CsvToPostgreSQL.class);
+    private static final Logger logger = LoggerFactory.getLogger(TsvToPostgreSQL.class);
 
     public static void main(String[] args) throws Exception {
+        // 通过命令行参来选择配置文件
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        // 通过命令行参来选择配置文件
         String activeProfile = params.get(DB_PROFILE);
 
         // CSV 文件路径
@@ -49,26 +49,25 @@ public class CsvToPostgreSQL {
         boolean isTruncate = false;
         if ("true".equalsIgnoreCase(isTruncateStr))
             isTruncate = true;
+
         logger.info("truncate is {}", isTruncate);
 
         ConfigLoader.loadConfiguration(activeProfile);
+
         // 创建流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1);
-
-        env.getConfig().setGlobalJobParameters(params);
-
 
         File folder = new File(folderPath);
+        StringBuffer sb = new StringBuffer();
         if (folder.exists()) {
             File[] files = folder.listFiles();
             if (files != null) {
                 for (File file : files) {
                     if (!file.isDirectory()) {
-                        String flieName = file.getName();
-                        String csvFilePath = folderPath + File.separator + flieName;
+                        String fileName = file.getName();
+                        String csvFilePath = folderPath + File.separator + fileName;
 
-                        String[] tableNameArr = flieName.split("_");
+                        String[] tableNameArr = fileName.split("_");
                         if (tableNameArr.length > 1) {
                             String schemaName = tableNameArr[0].toLowerCase();
                             String tableName = tableNameArr[1].split("\\.")[0].toLowerCase();
@@ -81,23 +80,51 @@ public class CsvToPostgreSQL {
                                 continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 
+                            sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").
+                                    append(schemaName).append(".").append(tableName).append(" ;\n");
+
                             logger.info("insertSql is {}", insertSql);
                             // 读取 CSV 文件并创建 DataStream
                             DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
                             // 将数据写入 PostgreSQL 数据库
                             csvDataStream.addSink(JdbcSink.sink(insertSql, (ps, t) -> {
                                         // 对每个数据元素进行写入操作
-                                        String[] datas = t.split("\\|");
+                                        String[] datas = t.split("\t");
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
-                                            if (i < datas.length) {
-                                                setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
-                                            } else {
-                                                if ("partition_flag".equalsIgnoreCase(colName)) {
-                                                    setPsData(i + 1, colName, colClass, tableName, ps, tableName);
+                                            if (colName.equalsIgnoreCase("insert_job_id") ||
+                                                    colName.equalsIgnoreCase("insert_pro_id") ||
+                                                    colName.equalsIgnoreCase("upd_user_id") ||
+                                                    colName.equalsIgnoreCase("upd_job_id") ||
+                                                    colName.equalsIgnoreCase("upd_pro_id")
+                                            ) {
+                                                if (datas.length > i) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
                                                 } else {
-                                                    setPsData(i + 1, colName, colClass, "", ps, tableName);
+                                                    setPsData(i + 1, colName, colClass, "", ps, fileName);
+                                                }
+
+                                            } else if (colName.equalsIgnoreCase("insert_user_id") ||
+                                                    colName.equalsIgnoreCase("partition_flag")
+                                            ) {
+                                                if (datas.length > i) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
+                                                } else {
+                                                    setPsData(i + 1, colName, colClass, tableName.toUpperCase(), ps, fileName);
+                                                }
+                                            } else if (colName.equalsIgnoreCase("upd_sys_date") ||
+                                                    colName.equalsIgnoreCase("insert_sys_date")) {
+                                                if (datas.length > i) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
+                                                } else {
+                                                    setPsData(i + 1, colName, colClass, "1990-01-01 00:00:00", ps, fileName);
+                                                }
+                                            } else {
+                                                if (i < datas.length) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
+                                                } else {
+                                                    setPsData(i + 1, colName, colClass, "", ps, fileName);
                                                 }
                                             }
                                         }
@@ -107,12 +134,15 @@ public class CsvToPostgreSQL {
                     }
                 }
             }
-        }
-        logger.info("Flink CsvToPostgreSQL job started");
-        // 执行流处理
-        env.execute("Flink CsvToPostgreSQL " + System.currentTimeMillis());
+            // 执行流处理
+            logger.info("Flink TxtToPostgreSQL job started");
 
-        logger.info("Flink CsvToPostgreSQL job finished");
+            env.execute("TxtToPostgreSQL" + System.currentTimeMillis());
+
+            logger.info("Flink TxtToPostgreSQL job finished");
+        }
+        logger.info("sql is {}", sb);
+
     }
 
     private static boolean checkParams(String activeProfile, String folderPath) {
@@ -122,13 +152,13 @@ public class CsvToPostgreSQL {
         }
 
         if (folderPath == null) {
-            logger.error("csv_path is null!");
+            logger.error("txt_path is null!");
             return false;
         }
         File resultFile = new File(folderPath);
 
         if (!resultFile.isDirectory()) {
-            logger.error("csv_path is not directory");
+            logger.error("txt_path is not directory");
             return false;
         }
         return true;

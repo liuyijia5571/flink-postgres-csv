@@ -3,15 +3,20 @@ package com.lyj.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
+import org.apache.flink.connector.jdbc.JdbcOutputFormat;
+import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,6 +46,21 @@ public class TableUtil {
 
     public static final Timestamp timestampDate = Timestamp.valueOf("1990-01-01 00:00:00");
 
+    public static final String CHARSE_TNAME_31J = "Windows-31J";
+
+    public static final Integer R05_DATE_SPLIT = 2310;
+
+
+    public static final String I34 = "I34";
+
+    public static final String M03 = "M03";
+
+    public static final String COL_NAMES = "COL_NAMES";
+    public static final String COL_CLASS = "COL_CLASS";
+    public static final String COL_LENGTH = "COL_LENGTH";
+    public static final String NUMERIC_SCALE = "NUMERIC_SCALE";
+
+
     public static final JdbcExecutionOptions jdbcExecutionOptions = JdbcExecutionOptions.builder().withBatchSize(1000) // 设置批处理大小
             .withBatchIntervalMs(200) // 设置批处理间隔时间
             .withMaxRetries(0) // 设置最大重试次数
@@ -52,7 +72,7 @@ public class TableUtil {
 
     public static String getInsertSql(List<String> colNames, String schemaName, String tableName) {
         StringBuilder sb = new StringBuilder();
-        String colStr = colNames.stream().map(u->"\""+u+"\"").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
+        String colStr = colNames.stream().map(u -> "\"" + u + "\"").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
         sb.append("INSERT INTO ").append(schemaName).append(".").append(tableName).append("(");
         sb.append(colStr);
         sb.append(") VALUES (");
@@ -63,29 +83,54 @@ public class TableUtil {
     }
 
     public static Map<String, List<String>> getColumns(String schema, String tableName, boolean isTruncate) throws Exception {
+        return getColumns(schema, tableName, isTruncate, false);
+    }
+
+    public static Map<String, List<String>> getColumns(String schema, String tableName, boolean isTruncate, boolean getSeqNo) throws Exception {
         Map<String, List<String>> columnsMap = new HashMap();
         List<String> colNames = new ArrayList<>();
         List<String> colClass = new ArrayList<>();
+        List<String> colLength = new ArrayList<>();
+        List<String> numericScaleList = new ArrayList<>();
+
         Connection conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
         Statement stmt = conn.createStatement();
         StringBuffer sb = new StringBuffer();
-        sb.append("SELECT column_name, data_type ");
+        sb.append("SELECT column_name, data_type , ");
+        sb.append(" CASE\n")
+                .append("        WHEN CHARACTER_MAXIMUM_LENGTH IS NOT NULL THEN CHARACTER_MAXIMUM_LENGTH \n")
+                .append("        WHEN DATA_TYPE IN ('decimal', 'numeric') THEN NUMERIC_PRECISION + NUMERIC_SCALE \n")
+                .append("        WHEN DATA_TYPE IN ('date', 'timestamp', 'datetime') THEN 10 \n")
+                .append("        ELSE NULL \n")
+                .append("    END AS col_length, \n")
+                .append("case WHEN NUMERIC_SCALE is null THEN 0 ELSE NUMERIC_SCALE END AS NUMERIC_SCALE \n");
         sb.append("FROM information_schema.columns ");
         sb.append("WHERE table_schema ilike '");
         sb.append(schema).append("' AND table_name ilike '");
         sb.append(tableName).append("' order by ordinal_position");
 
+
         logger.info("execute sql is {}", sb);
         ResultSet rs = stmt.executeQuery(sb.toString());
 
         while (rs.next()) {
+            if (rs.getString("column_name").equalsIgnoreCase("seq_no") && getSeqNo) {
+                colNames.add(rs.getString("column_name"));
+                colClass.add(rs.getString("data_type"));
+                colLength.add(String.valueOf(rs.getInt("col_length")));
+                numericScaleList.add(String.valueOf(rs.getInt("NUMERIC_SCALE")));
+            }
             if (!rs.getString("column_name").equalsIgnoreCase("seq_no")) {
                 colNames.add(rs.getString("column_name"));
                 colClass.add(rs.getString("data_type"));
+                colLength.add(String.valueOf(rs.getInt("col_length")));
+                numericScaleList.add(String.valueOf(rs.getInt("NUMERIC_SCALE")));
             }
         }
-        columnsMap.put("COL_NAMES", colNames);
-        columnsMap.put("COL_CLASS", colClass);
+        columnsMap.put(COL_NAMES, colNames);
+        columnsMap.put(COL_CLASS, colClass);
+        columnsMap.put(COL_LENGTH, colLength);
+        columnsMap.put(NUMERIC_SCALE, numericScaleList);
         rs.close();
 
         if (isTruncate && !colNames.isEmpty()) {
@@ -156,29 +201,13 @@ public class TableUtil {
                             ps.setTimestamp(parameterIndex, timestampDate);
                         }
                     } catch (ParseException e) {
-                        logger.error("dataValue contains /  tableName: {} colName: {} colName: {} error is {}", tableName, colName, dataValue, e.getMessage());
+                        logger.error("dataValue contains   tableName: {} colName: {} colName: {} error is {}", tableName, colName, dataValue, e.getMessage());
                         ps.setTimestamp(parameterIndex, timestampDate);
                     }
                 } else {
                     try {
                         // 计算天数部分和时间部分
-                        double excelDate = Double.parseDouble(dataValue);
-                        int days = (int) excelDate;
-                        double fraction = excelDate - days;
-
-                        // 基准日期
-                        LocalDate baseDate = LocalDate.of(1900, 1, 1).minusDays(2); // Excel dates start on 1900-01-01, but there is a bug considering 1900 as a leap year
-
-                        // 计算日期
-                        LocalDate date = baseDate.plusDays(days);
-
-                        // 计算时间
-                        long totalSecondsInDay = (long) (fraction * 24 * 60 * 60);
-                        LocalTime time = LocalTime.ofSecondOfDay(totalSecondsInDay);
-
-                        // 合并日期和时间
-                        LocalDateTime dateTime = LocalDateTime.of(date, time);
-
+                        LocalDateTime dateTime = getLocalDateTime(dataValue, tableName);
                         // 转换为 Timestamp
                         Timestamp timestamp = Timestamp.valueOf(dateTime);
                         ps.setTimestamp(parameterIndex, timestamp);
@@ -189,8 +218,39 @@ public class TableUtil {
                 }
                 break;
             default:
-                ps.setString(parameterIndex, dataValue.trim());
+                if (dataValue != null)
+                    ps.setString(parameterIndex, dataValue.trim());
+                else
+                    ps.setString(parameterIndex, dataValue);
                 break;
+        }
+    }
+
+    public static LocalDateTime getLocalDateTime(String dataValue, String fileName) {
+        try {
+            double excelDate = Double.parseDouble(dataValue);
+
+            int days = (int) excelDate;
+
+            double fraction = excelDate - days;
+
+            LocalDate baseDate = LocalDate.of(1900, 1, 1).minusDays(2); // Excel dates start on 1900-01-01, but there is a bug considering 1900 as a leap year
+            // 基准日期
+
+            // 计算日期
+            LocalDate date = baseDate.plusDays(days);
+
+            // 计算时间
+            long totalSecondsInDay = (long) (fraction * 24 * 60 * 60);
+            LocalTime time = LocalTime.ofSecondOfDay(totalSecondsInDay);
+
+            // 合并日期和时间
+            LocalDateTime dateTime = LocalDateTime.of(date, time);
+            return dateTime;
+        } catch (Exception e) {
+            logger.error("file is {} ,message is {}", fileName, e.getMessage());
+            LocalDateTime dateTime = LocalDateTime.of(1990, 1, 1, 0, 0, 0);
+            return dateTime;
         }
     }
 
@@ -293,5 +353,114 @@ public class TableUtil {
         }
 
         return sqlTypes;
+    }
+
+    public static String getGroupName(String groupId) {
+        String groupName = "";
+        switch (groupId) {
+            case "H":
+            case "h":
+                groupName = "長野";
+                break;
+            case "F":
+            case "f":
+                groupName = "船橋";
+                break;
+            case "K":
+            case "k":
+                groupName = "市川";
+                break;
+            case "N":
+            case "n":
+                groupName = "中野";
+                break;
+            case "Z":
+            case "z":
+                groupName = "須坂";
+                break;
+            default:
+                groupName = "その他";
+                break;
+        }
+        return groupName;
+    }
+
+    public static void setFieldValue(Row row, int rowIndex, String colClass, String dataValue) throws ParseException {
+        setFieldValue(row, rowIndex, colClass, dataValue, "0");
+    }
+
+    public static void setFieldValue(Row row, int rowIndex, String colClass, String dataValue, String numericScale) throws
+            ParseException {
+        switch (colClass) {
+            case "numeric":
+                try {
+                    if (StringUtils.isNotBlank(dataValue)) {
+                        int scale = Integer.valueOf(numericScale);
+                        if (scale > 0) {
+                            BigDecimal dataBigDecimal = new BigDecimal(dataValue).divideToIntegralValue(BigDecimal.TEN.pow(scale)).setScale(scale, RoundingMode.HALF_UP);
+                            row.setField(rowIndex, dataBigDecimal);
+                        } else
+                            row.setField(rowIndex, new BigDecimal(dataValue));
+                    } else {
+                        row.setField(rowIndex, new BigDecimal(0));
+                    }
+                } catch (Exception e) {
+                    logger.error("data is {},message is {}",dataValue,e.getMessage());
+                    row.setField(rowIndex, new BigDecimal(0));
+                }
+
+                break;
+            case "timestamp without time zone":
+                if (dataValue.contains("-")) {
+                    Date date = new Date(Timestamp.valueOf(dataValue).getTime());
+                    row.setField(rowIndex, date);
+                } else if (dataValue.contains("/")) {
+                    String determineDateFormat = determineDateFormat(dataValue, possibleFormats);
+                    if (!"未知格式".equals(determineDateFormat)) {
+                        SimpleDateFormat sdf = new SimpleDateFormat(determineDateFormat);
+                        long time = sdf.parse(dataValue).getTime();
+                        Date date = new Date(time);
+                        row.setField(rowIndex, date);
+                    }
+                }
+                break;
+            default:
+                row.setField(rowIndex, dataValue.trim());
+                break;
+        }
+
+    }
+
+    public static void insertDB(String schema, List<String> colNames, String
+            tableName, Map<String, List<String>> columns, DataSet<Row> insertData) {
+        // 将数据写入 PostGreSQL 数据库
+        String insertSql = getInsertSql(colNames, schema, tableName);
+        int[] sqlTypes = getSqlTypes(columns);
+        JdbcOutputFormat finish = JdbcOutputFormat.buildJdbcOutputFormat()
+                .setDrivername("org.postgresql.Driver")
+                .setDBUrl(getDatabaseUrl())
+                .setUsername(getDatabaseUsername())
+                .setPassword(getDatabasePassword())
+                .setQuery(insertSql)
+                .setSqlTypes(sqlTypes)
+                .finish();
+        insertData.output(finish);
+    }
+
+    public static int getMaxSeq(String schema, String tableName) throws SQLException {
+        Connection conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
+        Statement stmt = conn.createStatement();
+        StringBuffer sb = new StringBuffer();
+        sb.append("SELECT COUNT(1)");
+        sb.append(" FROM  ").append(schema).append(".").append(tableName);
+        logger.info("execute select count sql is {}", sb);
+        ResultSet rs = stmt.executeQuery(sb.toString());
+        int maxSeq = 0;
+        if (rs.next()) {
+            maxSeq = rs.getInt(1);
+        }
+        rs.close();
+        conn.close();
+        return maxSeq;
     }
 }

@@ -177,17 +177,17 @@ public class ConvertMashin00Code {
         RowTypeInfo insertRowTypeInfo = getRowTypeInfo(columns);
         TypeInformation<?>[] insertTypes = insertRowTypeInfo.getFieldTypes();
         DataSet<Row> insertData = resultData.filter(tuple3 -> "insert".equals(tuple3.f0)).map(new MapFunction<Tuple3, Row>() {
-            private long counter = 0;
+            private long count = 0;
 
             @Override
             public Row map(Tuple3 tuple3) {
-                counter++;
-                long seqNum = maxSeq + counter;
+                count++;
+                long seqNum = maxSeq + count;
                 Row insertData = new Row(9);
                 Tuple5 tuple5 = (Tuple5) tuple3.f2;
                 Row row = (Row) tuple3.f1;
                 if ("21".equals(tuple5.f0)) {
-                    insertData = convert(row, tuple5.f1.toString(), 4, mashinColMap, seqNum);
+                        insertData = convert(row, tuple5.f1.toString(), 4, mashinColMap, seqNum);
                 } else if ("34".equals(tuple5.f0)) {
                     insertData = convert(row, tuple5.f1.toString(), 5, mashinColMap, seqNum);
                 } else if ("35".equals(tuple5.f0)) {

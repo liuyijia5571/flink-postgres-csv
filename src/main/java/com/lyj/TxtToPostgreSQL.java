@@ -25,10 +25,10 @@ public class TxtToPostgreSQL {
     private static final Logger logger = LoggerFactory.getLogger(TxtToPostgreSQL.class);
 
     public static void main(String[] args) throws Exception {
-        // 通过命令行参来选择配置文件
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
+        // 通过命令行参来选择配置文件
         String activeProfile = params.get(DB_PROFILE);
 
         // CSV 文件路径
@@ -49,16 +49,17 @@ public class TxtToPostgreSQL {
         boolean isTruncate = false;
         if ("true".equalsIgnoreCase(isTruncateStr))
             isTruncate = true;
-
         logger.info("truncate is {}", isTruncate);
 
         ConfigLoader.loadConfiguration(activeProfile);
-
         // 创建流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+
+        env.getConfig().setGlobalJobParameters(params);
+
 
         File folder = new File(folderPath);
-        StringBuffer sb = new StringBuffer();
         if (folder.exists()) {
             File[] files = folder.listFiles();
             if (files != null) {
@@ -80,51 +81,23 @@ public class TxtToPostgreSQL {
                                 continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 
-                            sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").
-                                    append(schemaName).append(".").append(tableName).append(" ;\n");
-
                             logger.info("insertSql is {}", insertSql);
                             // 读取 CSV 文件并创建 DataStream
                             DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
                             // 将数据写入 PostgreSQL 数据库
                             csvDataStream.addSink(JdbcSink.sink(insertSql, (ps, t) -> {
                                         // 对每个数据元素进行写入操作
-                                        String[] datas = t.split("\t");
+                                        String[] datas = t.split("\\|");
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
-                                            if (colName.equalsIgnoreCase("insert_job_id") ||
-                                                    colName.equalsIgnoreCase("insert_pro_id") ||
-                                                    colName.equalsIgnoreCase("upd_user_id") ||
-                                                    colName.equalsIgnoreCase("upd_job_id") ||
-                                                    colName.equalsIgnoreCase("upd_pro_id")
-                                            ) {
-                                                if (datas.length > i) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, flieName);
-                                                } else {
-                                                    setPsData(i + 1, colName, colClass, "", ps, flieName);
-                                                }
-
-                                            } else if (colName.equalsIgnoreCase("insert_user_id") ||
-                                                    colName.equalsIgnoreCase("partition_flag")
-                                            ) {
-                                                if (datas.length > i) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, flieName);
-                                                } else {
-                                                    setPsData(i + 1, colName, colClass, tableName.toUpperCase(), ps, flieName);
-                                                }
-                                            } else if (colName.equalsIgnoreCase("upd_sys_date") ||
-                                                    colName.equalsIgnoreCase("insert_sys_date")) {
-                                                if (datas.length > i) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, flieName);
-                                                } else {
-                                                    setPsData(i + 1, colName, colClass, "1990-01-01 00:00:00", ps, flieName);
-                                                }
+                                            if (i < datas.length) {
+                                                setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
                                             } else {
-                                                if (i < datas.length) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
+                                                if ("partition_flag".equalsIgnoreCase(colName)) {
+                                                    setPsData(i + 1, colName, colClass, tableName, ps, tableName);
                                                 } else {
-                                                    setPsData(i + 1, colName, colClass, "", ps, flieName);
+                                                    setPsData(i + 1, colName, colClass, "", ps, tableName);
                                                 }
                                             }
                                         }
@@ -134,15 +107,12 @@ public class TxtToPostgreSQL {
                     }
                 }
             }
-            // 执行流处理
-            logger.info("Flink TxtToPostgreSQL job started");
-
-            env.execute("TxtToPostgreSQL" + System.currentTimeMillis());
-
-            logger.info("Flink TxtToPostgreSQL job finished");
         }
-        logger.info("sql is {}", sb);
+        logger.info("Flink CsvToPostgreSQL job started");
+        // 执行流处理
+        env.execute("Flink CsvToPostgreSQL " + System.currentTimeMillis());
 
+        logger.info("Flink CsvToPostgreSQL job finished");
     }
 
     private static boolean checkParams(String activeProfile, String folderPath) {
@@ -152,13 +122,13 @@ public class TxtToPostgreSQL {
         }
 
         if (folderPath == null) {
-            logger.error("txt_path is null!");
+            logger.error("csv_path is null!");
             return false;
         }
         File resultFile = new File(folderPath);
 
         if (!resultFile.isDirectory()) {
-            logger.error("txt_path is not directory");
+            logger.error("csv_path is not directory");
             return false;
         }
         return true;
