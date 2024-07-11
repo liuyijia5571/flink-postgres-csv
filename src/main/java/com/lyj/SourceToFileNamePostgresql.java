@@ -18,7 +18,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,26 +28,27 @@ import java.util.stream.Collectors;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.FileSearchUtil.findDirectoriesContainingFile;
-import static com.lyj.util.TableUtil.CHARSE_TNAME_31J;
+import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.COL_CLASS;
 import static com.lyj.util.TableUtil.COL_LENGTH;
 import static com.lyj.util.TableUtil.COL_NAMES;
+import static com.lyj.util.TableUtil.FILE_NAME;
 import static com.lyj.util.TableUtil.I34;
 import static com.lyj.util.TableUtil.M03;
 import static com.lyj.util.TableUtil.NUMERIC_SCALE;
 import static com.lyj.util.TableUtil.R05_DATE_SPLIT;
+import static com.lyj.util.TableUtil.deleteDataByFileName;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.getGroupName;
-import static com.lyj.util.TableUtil.getMaxSeq;
 import static com.lyj.util.TableUtil.insertDB;
 import static com.lyj.util.TableUtil.setFieldValue;
 
 /**
  * source to postgresql
  */
-public class SourceToPostgresql {
+public class SourceToFileNamePostgresql {
 
-    private static final Logger logger = LoggerFactory.getLogger(SourceToPostgresql.class);
+    private static final Logger logger = LoggerFactory.getLogger(SourceToFileNamePostgresql.class);
 
     private static final String ADD_SEQ = "ADD_SEQ";
 
@@ -55,6 +58,20 @@ public class SourceToPostgresql {
 
     private static final String ADD_SEQ_AND_DATE = "ADD_SEQ_AND_DATE";
 
+    private static final String NOW_DATE;
+
+    static {
+        // 获取当前时间的时间戳
+        long currentTimeMillis = System.currentTimeMillis();
+
+        // 创建日期对象
+        Date date = new Date(currentTimeMillis);
+
+        // 定义日期格式
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        NOW_DATE = dateFormat.format(date);
+    }
 
     public static void main(String[] args) throws Exception {
 
@@ -72,32 +89,24 @@ public class SourceToPostgresql {
 
         String jobFile = params.get("job_file");
 
-        boolean isTruncate = params.getBoolean("truncate", true);
-
         boolean checkParamsResult = checkParams(activeProfile, inputFilePath, schema, jobFile);
 
         if (!checkParamsResult) {
-            logger.error("params demo : " +
-                    "--db_profile dev43  \n" +
-                    "--input_file_path C:\\青果\\黄信中要的数据　\n" +
-                    "--schema xuexiaodingtest2 \n" +
-                    "--job_file C:\\青果\\job.txt"
-            );
+            logger.error("params demo : " + "--db_profile dev43  \n" + "--input_file_path C:\\青果\\黄信中要的数据　\n" + "--schema xuexiaodingtest2 \n" + "--job_file C:\\青果\\job.txt");
             return;
         }
         ConfigLoader.loadConfiguration(activeProfile);
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        env.getConfig().setGlobalJobParameters(params);
 
+        boolean isTruncate = params.getBoolean("truncate", false);
 
         List<Tuple5> jobMap = Files.readAllLines(Paths.get(jobFile)).stream().map(u -> {
             Tuple5 tuple5 = new Tuple5();
             String[] split = u.split("\t", -1);
             for (int i = 0; i < split.length; i++) {
-                if (i < 5)
-                    tuple5.setField(split[i], i);
+                if (i < 5) tuple5.setField(split[i], i);
             }
             return tuple5;
         }).collect(Collectors.toList());
@@ -180,11 +189,11 @@ public class SourceToPostgresql {
                     List<Tuple5> oldTupleList = addSeqAndJoinDaysJob.get(tableName);
                     if (oldTupleList == null) {
                         List<Tuple5> tuple5List = new ArrayList<>();
-                        Tuple5 newTuple5 = new Tuple5(tuple5.f0, tuple5.f1, tuple5.f2, tuple5.f3 + File.separator + groupName + filePath, tuple5.f4);
+                        Tuple5 newTuple5 = new Tuple5(tuple5.f0, tuple5.f1, groupName + filePath + File.separator + tuple5.f2, tuple5.f3, tuple5.f4);
                         tuple5List.add(newTuple5);
                         addSeqAndJoinDaysJob.put(tableName, tuple5List);
                     } else {
-                        Tuple5 newTuple5 = new Tuple5(tuple5.f0, tuple5.f1, tuple5.f2, tuple5.f3 + File.separator + groupName + filePath, tuple5.f4);
+                        Tuple5 newTuple5 = new Tuple5(tuple5.f0, tuple5.f1, groupName + filePath + File.separator + tuple5.f2, tuple5.f3, tuple5.f4);
                         oldTupleList.add(newTuple5);
                     }
                 }
@@ -200,7 +209,7 @@ public class SourceToPostgresql {
         insertJob(addSeqJob, schema, inputFilePath, env, errList, isTruncate);
 
         //处理 addSeqAndGroupJob
-        insertJob(addSeqAndGroupJob, schema, inputFilePath, env, errList, isTruncate, "|");
+        insertJob(addSeqAndGroupJob, schema, inputFilePath, env, errList, "|", isTruncate);
 
         //处理 addSeqAndYearJob
         insertJob(addSeqAndYearJob, schema, inputFilePath, env, errList, isTruncate);
@@ -211,16 +220,17 @@ public class SourceToPostgresql {
         if (!errList.isEmpty()) {
             logger.error("error info is {}", errList);
         }
-        env.execute(SourceToPostgresql.class.getName() + System.currentTimeMillis());
+
+        env.execute(SourceToFileNamePostgresql.class.getName() + "_" + NOW_DATE);
 
     }
 
-    private static void insertJob(Map<String, List<Tuple5>> groupJob, String schema, String inputFilePath, ExecutionEnvironment env, List<Tuple2> errList, boolean isTruncate, String regexStr) throws Exception {
+    private static void insertJob(Map<String, List<Tuple5>> groupJob, String schema, String inputFilePath, ExecutionEnvironment env, List<Tuple2> errList, String regexStr, boolean isTruncate) throws Exception {
         for (Map.Entry<String, List<Tuple5>> entry : groupJob.entrySet()) {
             String tableName = entry.getKey();
             List<Tuple5> tableInfo = entry.getValue();
             Map<String, List<String>> columns = null;
-            if ("M03".equalsIgnoreCase((String) tableInfo.get(0).f0) || "M04".equalsIgnoreCase((String) tableInfo.get(0).f0)) {
+            if ("M03".equalsIgnoreCase((String) tableInfo.get(0).f0) || "M04".equalsIgnoreCase((String) tableInfo.get(0).f0)|| "M32".equalsIgnoreCase((String) tableInfo.get(0).f0)) {
                 //有些文件没有日期，就是取最近的一份
                 if (!isTruncate) {
                     //清空表数据
@@ -230,13 +240,13 @@ public class SourceToPostgresql {
             if (columns == null) {
                 columns = getColumns(schema, tableName, isTruncate, true);
             }
-            DataSet<String> allFileContents = getAllFileContents(inputFilePath, env, errList, tableName, tableInfo, columns, regexStr);
+            DataSet<Row> allFileContents = getAllFileContents(schema, inputFilePath, env, errList, tableName, tableInfo, columns, regexStr);
             changeAndInsertDBData(schema, allFileContents, tableName, columns, regexStr);
         }
     }
 
     private static void insertJob(Map<String, List<Tuple5>> addSeqAndYearJob, String schema, String inputFilePath, ExecutionEnvironment env, List<Tuple2> errList, boolean isTruncate) throws Exception {
-        insertJob(addSeqAndYearJob, schema, inputFilePath, env, errList, isTruncate, ",");
+        insertJob(addSeqAndYearJob, schema, inputFilePath, env, errList, ",", isTruncate);
     }
 
     /**
@@ -250,15 +260,23 @@ public class SourceToPostgresql {
      * @return
      * @throws Exception
      */
-    private static DataSet<String> getAllFileContents(String inputFilePath, ExecutionEnvironment env, List<Tuple2> errList, String tableName, List<Tuple5> tableInfo, Map<String, List<String>> columns, String regexStr) throws Exception {
+    private static DataSet<Row> getAllFileContents(String schema, String inputFilePath, ExecutionEnvironment env, List<Tuple2> errList, String tableName, List<Tuple5> tableInfo, Map<String, List<String>> columns, String regexStr) throws Exception {
         // 用于存储所有文件内容的 DataSet
-        DataSet<String> allFileContents = null;
+        DataSet<Row> allFileContents = null;
         List<String> colClass = columns.get(COL_CLASS);
+        List<String> colNames = columns.get(COL_NAMES);
         List<String> colLengths = columns.get(COL_LENGTH);
         List<String> numericScaleList = columns.get(NUMERIC_SCALE);
+        List<String> newColName = null;
+        if (tableName.contains("m041")) {
+            String newTable = tableName.replace("m041", "m04");
+            Map<String, List<String>> newColumns = getColumns(schema, newTable, false, true);
+            newColName = newColumns.get(COL_NAMES);
+        }
         if (!colClass.isEmpty()) {
             for (Tuple5 tuple5 : tableInfo) {
-                String filePath = inputFilePath + File.separator + tuple5.f3 + File.separator + tuple5.f2;
+                String fileName = (String) tuple5.f2;
+                String filePath = inputFilePath + File.separator + tuple5.f3 + File.separator + fileName;
                 logger.info("read file path is {}", filePath);
                 File readFilePath = new File(filePath);
                 if (readFilePath.exists()) {
@@ -267,7 +285,7 @@ public class SourceToPostgresql {
                         List<String> array = numericScaleList.stream().map(u -> "0").collect(Collectors.toList());
                         columns.put("NUMERIC_SCALE", array);
                     }
-                    FilterOperator<String> stringDataSource = env.readTextFile(filePath, CHARSE_TNAME_31J).filter(line -> !"".equals(line));
+                    FilterOperator<String> stringDataSource = env.readTextFile(filePath, CHARSET_NAME_31J).filter(line -> !"".equals(line));
                     // 合并 DataSet
                     //R05的数据是   202310  以前的逻辑是 是按顺序插入，202312 之后是
                     // 取  arr(0) & "," & arr(1) & "," & arr(2) & "," & arr(3) & "," & arr(4) & "," & arr(5) & "," & arr(6) &
@@ -279,64 +297,94 @@ public class SourceToPostgresql {
                         String date = ((String) tuple5.f2).substring(indexOf + 1, indexOf + 5);
                         int dateInt = Integer.valueOf(date);
                         if (dateInt >= R05_DATE_SPLIT) {
-                            MapOperator<String, String> mapOperator = stringDataSource.map(new MapFunction<String, String>() {
-                                @Override
-                                public String map(String line) throws Exception {
-                                    String[] split = line.split(regexStr, -1);
-                                    StringBuilder lineStr = new StringBuilder();
-                                    if (split.length > 29) {
-                                        for (int i = 0; i < 9; i++) {
-                                            lineStr.append(split[i]).append(regexStr);
-                                        }
-                                        lineStr.append("0").append(regexStr)
-                                                .append(split[18]).append(regexStr)
-                                                .append(split[19]).append(regexStr)
-                                                .append("0").append(regexStr)
-                                                .append(split[20]).append(regexStr)
-                                                .append(split[21]).append(regexStr)
-                                                .append(split[25]).append(regexStr)
-                                                .append(split[29]);
-                                        return lineStr.toString();
+                            MapOperator<String, String> mapOperator = stringDataSource.map(line -> {
+                                String[] split = line.split(regexStr, -1);
+                                StringBuilder lineStr = new StringBuilder();
+                                if (split.length > 29) {
+                                    for (int i = 0; i < 9; i++) {
+                                        lineStr.append(split[i]).append(regexStr);
                                     }
-                                    return line;
+                                    lineStr.append("0").append(regexStr).append(split[18]).append(regexStr).append(split[19]).append(regexStr).append("0").append(regexStr).append(split[20]).append(regexStr).append(split[21]).append(regexStr).append(split[25]).append(regexStr).append(split[29]);
+                                    return lineStr.toString();
                                 }
+                                return line;
                             });
+
+                            DataSet<Row> stringRowMapOperator = getStringRowMapOperator(mapOperator, schema, tableName, columns, regexStr, fileName);
                             if (allFileContents == null) {
-                                allFileContents = mapOperator;
+                                allFileContents = stringRowMapOperator;
                             } else {
-                                allFileContents = allFileContents.union(mapOperator);
+                                allFileContents = allFileContents.union(stringRowMapOperator);
                             }
                         } else {
+                            DataSet<Row> stringRowMapOperator = getStringRowMapOperator(stringDataSource, schema, tableName, columns, regexStr, fileName);
                             if (allFileContents == null) {
-                                allFileContents = stringDataSource;
+                                allFileContents = stringRowMapOperator;
                             } else {
-                                allFileContents = allFileContents.union(stringDataSource);
+                                allFileContents = allFileContents.union(stringRowMapOperator);
                             }
                         }
                     } else if ("R27".equalsIgnoreCase((String) tuple5.f0)) {
                         String f0 = (String) tuple5.f0;
                         int indexOf = f0.length();
                         String date = ((String) tuple5.f2).substring(indexOf + 1, indexOf + 7);
+                        MapOperator<String, String> mapOperator = stringDataSource.map(line -> {
+                            String[] split = line.split(regexStr, -1);
+                            StringBuilder lineStr = new StringBuilder();
+                            for (int i = 0; i < split.length; i++) {
+                                if (i == 3) {
+                                    lineStr.append(date).append(regexStr);
+                                }
+                                lineStr.append(split[i]);
+                                if (i < split.length - 1) lineStr.append(regexStr);
+                            }
+                            return lineStr.toString();
+                        });
+                        DataSet<Row> stringRowMapOperator = getStringRowMapOperator(mapOperator, schema, tableName, columns, regexStr, fileName);
+                        if (allFileContents == null) {
+                            allFileContents = stringRowMapOperator;
+                        } else {
+                            allFileContents = allFileContents.union(stringRowMapOperator);
+                        }
+                    } else if ("M041".equalsIgnoreCase((String) tuple5.f0)) {
+                        String f0 = (String) tuple5.f0;
+                        int indexOf = f0.length();
+                        String date = "20" + ((String) tuple5.f2).substring(indexOf, indexOf + 6);
+                        List<String> finalNewColName = newColName;
                         MapOperator<String, String> mapOperator = stringDataSource.map(new MapFunction<String, String>() {
                             @Override
                             public String map(String line) throws Exception {
                                 String[] split = line.split(regexStr, -1);
                                 StringBuilder lineStr = new StringBuilder();
-                                for (int i = 0; i < split.length; i++) {
-                                    if (i == 3) {
-                                        lineStr.append(date).append(regexStr);
+                                if (finalNewColName != null) {
+                                    lineStr.append(date).append(regexStr);
+                                    for (int i = 1; i < colNames.size(); i++) {
+                                        String colName = colNames.get(i);
+                                        if (!FILE_NAME.equalsIgnoreCase(colName)) {
+                                            int colIndex = getColIndex(finalNewColName, colName);
+                                            lineStr.append(split[colIndex]);
+                                            lineStr.append(regexStr);
+                                        }
                                     }
-                                    lineStr.append(split[i]);
-                                    if (i < split.length - 1)
-                                        lineStr.append(regexStr);
                                 }
-                                return lineStr.toString();
+                                return lineStr.substring(0, lineStr.length() - 1);
+                            }
+
+                            private int getColIndex(List<String> finalNewColName, String colName) {
+                                for (int i = 0; i < finalNewColName.size(); i++) {
+                                    String newColName = colName.replace("m041", "m04").replace("M041", "M04");
+                                    if (newColName.equalsIgnoreCase(finalNewColName.get(i))) {
+                                        return i;
+                                    }
+                                }
+                                return -1;
                             }
                         });
+                        DataSet<Row> stringRowMapOperator = getStringRowMapOperator(mapOperator, schema, tableName, columns, regexStr, fileName);
                         if (allFileContents == null) {
-                            allFileContents = mapOperator;
+                            allFileContents = stringRowMapOperator;
                         } else {
-                            allFileContents = allFileContents.union(mapOperator);
+                            allFileContents = allFileContents.union(stringRowMapOperator);
                         }
                     } else if (ADD_SEQ_AND_GROUP.equalsIgnoreCase((String) tuple5.f4)) {
                         //获取groupName
@@ -345,51 +393,49 @@ public class SourceToPostgresql {
                         String groupId = ((String) tuple5.f2).substring(indexOf, indexOf + 1);
                         String groupName = getGroupName(groupId);
 
-                        MapOperator<String, String> mapOperator = stringDataSource.map(new MapFunction<String, String>() {
-                            @Override
-                            public String map(String line) {
-                                StringBuilder sb = new StringBuilder();
-                                sb.append(groupName).append(regexStr);
-                                int subStringIndex = 0;
-                                char[] chars = line.toCharArray();
-                                for (int i = 2; i < colLengths.size(); i++) {
-                                    int colLength = Integer.valueOf(colLengths.get(i));
-                                    if (i < colLengths.size() - 1) {
-                                        if (line.length() > subStringIndex + colLength) {
-                                            char[] colChar = new char[colLength];
-                                            for (int j = 0; j < colChar.length; j++) {
-                                                colChar[j] = chars[subStringIndex + j];
-                                            }
-                                            sb.append(new String(colChar));
-                                        } else {
-                                            if (line.length() > subStringIndex) {
-                                                char[] colChar = new char[colLength];
-                                                for (int j = 0; j < colChar.length; j++) {
-                                                    if (subStringIndex + j < line.length())
-                                                        colChar[j] = chars[subStringIndex + j];
-                                                }
-                                                sb.append(new String(colChar));
-                                            }
+                        MapOperator<String, String> mapOperator = stringDataSource.map(line -> {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(groupName).append(regexStr);
+                            int subStringIndex = 0;
+                            char[] chars = line.toCharArray();
+                            for (int i = 2; i < colLengths.size(); i++) {
+                                int colLength = Integer.valueOf(colLengths.get(i));
+                                if (i < colLengths.size() - 1) {
+                                    if (line.length() > subStringIndex + colLength) {
+                                        char[] colChar = new char[colLength];
+                                        for (int j = 0; j < colChar.length; j++) {
+                                            colChar[j] = chars[subStringIndex + j];
                                         }
-                                        sb.append(regexStr);
+                                        sb.append(new String(colChar));
                                     } else {
                                         if (line.length() > subStringIndex) {
                                             char[] colChar = new char[colLength];
                                             for (int j = 0; j < colChar.length; j++) {
-                                                colChar[j] = chars[subStringIndex + j];
+                                                if (subStringIndex + j < line.length())
+                                                    colChar[j] = chars[subStringIndex + j];
                                             }
                                             sb.append(new String(colChar));
                                         }
                                     }
-                                    subStringIndex += colLength;
+                                    sb.append(regexStr);
+                                } else {
+                                    if (line.length() > subStringIndex) {
+                                        char[] colChar = new char[colLength];
+                                        for (int j = 0; j < colChar.length; j++) {
+                                            colChar[j] = chars[subStringIndex + j];
+                                        }
+                                        sb.append(new String(colChar));
+                                    }
                                 }
-                                return sb.toString();
+                                subStringIndex += colLength;
                             }
+                            return sb.toString();
                         });
+                        DataSet<Row> stringRowMapOperator = getStringRowMapOperator(mapOperator, schema, tableName, columns, regexStr, fileName);
                         if (allFileContents == null) {
-                            allFileContents = mapOperator;
+                            allFileContents = stringRowMapOperator;
                         } else {
-                            allFileContents = allFileContents.union(mapOperator);
+                            allFileContents = allFileContents.union(stringRowMapOperator);
                         }
                     } else if (ADD_SEQ_AND_DATE.equalsIgnoreCase((String) tuple5.f4)) {
                         //获取DATE
@@ -399,20 +445,22 @@ public class SourceToPostgresql {
                         String year = yearAndMon.substring(0, 2);
                         String mon = yearAndMon.substring(2, 4);
                         if ("03".equals(mon)) {
-                            year = "20" + String.format("%02d", Integer.valueOf(year) - 1);
+                            year = String.format("%02d", Integer.valueOf(year) - 1);
                         }
                         String date = "20" + year;
                         MapOperator<String, String> mapOperator = stringDataSource.map(u -> u + date);
+                        DataSet<Row> stringRowMapOperator = getStringRowMapOperator(mapOperator, schema, tableName, columns, regexStr, fileName);
                         if (allFileContents == null) {
-                            allFileContents = mapOperator;
+                            allFileContents = stringRowMapOperator;
                         } else {
-                            allFileContents = allFileContents.union(mapOperator);
+                            allFileContents = allFileContents.union(stringRowMapOperator);
                         }
                     } else {
+                        DataSet<Row> stringRowMapOperator = getStringRowMapOperator(stringDataSource, schema, tableName, columns, regexStr, fileName);
                         if (allFileContents == null) {
-                            allFileContents = stringDataSource;
+                            allFileContents = stringRowMapOperator;
                         } else {
-                            allFileContents = allFileContents.union(stringDataSource);
+                            allFileContents = allFileContents.union(stringRowMapOperator);
                         }
                     }
                 } else {
@@ -431,75 +479,82 @@ public class SourceToPostgresql {
         return allFileContents;
     }
 
-    private static void changeAndInsertDBData(String schema, DataSet<String> allFileContents, String
-            tableName, Map<String, List<String>> columns, String regexStr) throws SQLException {
-        if (allFileContents != null) {
+    private static void changeAndInsertDBData(String schema, DataSet<Row> insertData, String tableName, Map<String, List<String>> columns, String regexStr) throws SQLException {
+        if (insertData != null) {
             List<String> colNames = columns.get(COL_NAMES);
-            List<String> colClass = columns.get(COL_CLASS);
-            List<String> numericScaleList = columns.get(NUMERIC_SCALE);
+            insertDB(schema, colNames, tableName, columns, insertData);
+        }
+    }
 
-            //拼接需要插入数据库的Row对象
-            int maxSeq = getMaxSeq(schema, tableName);
-            logger.info("table name is {} ,count is {}", tableName, maxSeq);
+    private static MapOperator<String, Row> getStringRowMapOperator(DataSet<String> allFileContents, String schema, String tableName, Map<String, List<String>> columns, String regexStr, String fileName) throws SQLException {
+        List<String> colNames = columns.get(COL_NAMES);
+        List<String> colClass = columns.get(COL_CLASS);
+        List<String> numericScaleList = columns.get(NUMERIC_SCALE);
+        //拼接需要插入数据库的Row对象
+        for (int i = 0; i < colNames.size(); i++) {
+            if (FILE_NAME.equalsIgnoreCase(colNames.get(i))) {
+                boolean execute = deleteDataByFileName(schema, tableName, fileName);
+                if (execute) {
+                    logger.debug("file_name is {} delete success! schema is {},tableName is {}", fileName, schema, tableName);
+                }
+            }
+        }
+        MapOperator<String, Row> insertData = allFileContents.map(new RichMapFunction<String, Row>() {
+            private int index = 0;
 
-            MapOperator<String, Row> insertData = allFileContents.map(new RichMapFunction<String, Row>() {
-                private int index = 0;
-
-                @Override
-                public Row map(String line) throws Exception {
-                    index++;
-                    String regex = regexStr;
-                    if ("|".equals(regexStr)) {
-                        regex = "\\|";
-                    }
-                    String[] split = line.split(regex, -1);
-                    Row row = new Row(colNames.size());
-                    //set seq
-                    int tableIndex = 0;
-                    if (colNames.get(0).contains("レコード") || "seq_no".equalsIgnoreCase(colNames.get(0))) {
-                        int seqNo = maxSeq + index;
-                        setFieldValue(row, 0, colClass.get(0), String.valueOf(seqNo), numericScaleList.get(0));
-                        tableIndex = 1;
-                    }
-                    for (int i = tableIndex; i < colNames.size(); i++) {
-                        String numericScale = numericScaleList.get(i);
-                        String colName = colNames.get(i);
-                        if (i > split.length) {
-                            //处理共同字段
-                            if (colName.equalsIgnoreCase("insert_job_id") ||
-                                    colName.equalsIgnoreCase("insert_pro_id") ||
-                                    colName.equalsIgnoreCase("upd_user_id") ||
-                                    colName.equalsIgnoreCase("upd_job_id") ||
-                                    colName.equalsIgnoreCase("upd_pro_id")
-                            ) {
-                                setFieldValue(row, i, colClass.get(i), "", numericScale);
-                            } else if (colName.equalsIgnoreCase("insert_user_id") ||
-                                    colName.equalsIgnoreCase("partition_flag")
-                            ) {
-                                setFieldValue(row, i, colClass.get(i), tableName, numericScale);
-                            } else if (colName.equalsIgnoreCase("upd_sys_date") ||
-                                    colName.equalsIgnoreCase("insert_sys_date")) {
-                                setFieldValue(row, i, colClass.get(i), "1990-01-01 00:00:00", numericScale);
+            @Override
+            public Row map(String line) throws Exception {
+                index++;
+                String regex = regexStr;
+                if ("|".equals(regexStr)) {
+                    regex = "\\|";
+                }
+                String[] split = line.split(regex, -1);
+                Row row = new Row(colNames.size());
+                //set seq
+                int tableIndex = 0;
+                if (colNames.get(0).contains("レコード") || "seq_no".equalsIgnoreCase(colNames.get(0))) {
+                    setFieldValue(row, 0, colClass.get(0), String.valueOf(index), numericScaleList.get(0),tableName);
+                    tableIndex = 1;
+                }
+                for (int i = tableIndex; i < colNames.size(); i++) {
+                    String numericScale = numericScaleList.get(i);
+                    String colName = colNames.get(i);
+                    if (i > split.length) {
+                        //处理共同字段
+                        if (colName.equalsIgnoreCase("insert_job_id") || colName.equalsIgnoreCase("insert_pro_id") || colName.equalsIgnoreCase("upd_user_id") || colName.equalsIgnoreCase("upd_job_id") || colName.equalsIgnoreCase("upd_pro_id")) {
+                            setFieldValue(row, i, colClass.get(i), "", numericScale,tableName);
+                        } else if (colName.equalsIgnoreCase("insert_user_id") || colName.equalsIgnoreCase("partition_flag")) {
+                            setFieldValue(row, i, colClass.get(i), tableName, numericScale,tableName);
+                        } else if (colName.equalsIgnoreCase("upd_sys_date") || colName.equalsIgnoreCase("insert_sys_date")) {
+                            setFieldValue(row, i, colClass.get(i), NOW_DATE, numericScale,tableName);
+                        } else if (colName.equalsIgnoreCase(FILE_NAME)) {
+                            setFieldValue(row, i, colClass.get(i), fileName, numericScale,tableName);
+                        } else {
+                            setFieldValue(row, i, colClass.get(i), "", numericScale,tableName);
+                        }
+                    } else {
+                        if (tableIndex == 0) {
+                            if (colName.equalsIgnoreCase(FILE_NAME)) {
+                                setFieldValue(row, i, colClass.get(i), fileName, numericScale,tableName);
+                            } else if (i == split.length) {
+                                setFieldValue(row, i, colClass.get(i), "", numericScale,tableName);
                             } else {
-                                setFieldValue(row, i, colClass.get(i), "", numericScale);
+                                setFieldValue(row, i, colClass.get(i), split[i].trim(), numericScale,tableName);
                             }
                         } else {
-                            if (tableIndex == 0) {
-                                if (i == split.length)
-                                    setFieldValue(row, i, colClass.get(i), "", numericScale);
-                                else
-                                    setFieldValue(row, i, colClass.get(i), split[i].trim(), numericScale);
+                            if (colName.equalsIgnoreCase(FILE_NAME)) {
+                                setFieldValue(row, i, colClass.get(i), fileName, numericScale,tableName);
                             } else {
-                                setFieldValue(row, i, colClass.get(i), split[i - 1].trim(), numericScale);
+                                setFieldValue(row, i, colClass.get(i), split[i - 1].trim(), numericScale,tableName);
                             }
                         }
                     }
-                    return row;
                 }
-            }).setParallelism(1);
-
-            insertDB(schema, colNames, tableName, columns, insertData);
-        }
+                return row;
+            }
+        }).setParallelism(1);
+        return insertData;
     }
 
 

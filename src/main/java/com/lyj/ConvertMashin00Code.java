@@ -72,7 +72,7 @@ public class ConvertMashin00Code {
         String resultPath = params.get("right_result_file");
 
         boolean checkParamsResult = checkParams(activeProfile, schema, folderPath, resultPath);
-        if (!checkParamsResult){
+        if (!checkParamsResult) {
             logger.error("params demo : " +
                     "--db_profile dev43  \n" +
                     "--schema xuexiaodingtest  \n" +
@@ -144,7 +144,9 @@ public class ConvertMashin00Code {
         int maxSeq = getMaxSeq(schema, INSERT_TABLE_NAME, SEQ_COL);
         int finalIndex = index;
 
-        JoinOperator<Row, Tuple5, Tuple3> resultData = dataStream.rightOuterJoin(csvData).where(row -> row.getField(finalIndex).toString()).equalTo(3).with(new JoinFunction<Row, Tuple5, Tuple3>() {
+        JoinOperator<Row, Tuple5, Tuple3> resultData = dataStream.rightOuterJoin(csvData)
+                .where(row -> row.getField(finalIndex).toString())
+                .equalTo(3).with(new JoinFunction<Row, Tuple5, Tuple3>() {
             @Override
             public Tuple3 join(Row row, Tuple5 tuple5) throws Exception {
                 Tuple3 tuple3 = new Tuple3<>();
@@ -168,8 +170,6 @@ public class ConvertMashin00Code {
             }
         }).returns(TUPLE(csvTypes));
 
-        System.out.println(rightData.count());
-
         rightData.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
 
         //插入新增数据
@@ -187,7 +187,7 @@ public class ConvertMashin00Code {
                 Tuple5 tuple5 = (Tuple5) tuple3.f2;
                 Row row = (Row) tuple3.f1;
                 if ("21".equals(tuple5.f0)) {
-                        insertData = convert(row, tuple5.f1.toString(), 4, mashinColMap, seqNum);
+                    insertData = convert(row, tuple5.f1.toString(), 4, mashinColMap, seqNum);
                 } else if ("34".equals(tuple5.f0)) {
                     insertData = convert(row, tuple5.f1.toString(), 5, mashinColMap, seqNum);
                 } else if ("35".equals(tuple5.f0)) {

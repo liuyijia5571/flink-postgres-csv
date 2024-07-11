@@ -46,7 +46,7 @@ public class TableUtil {
 
     public static final Timestamp timestampDate = Timestamp.valueOf("1990-01-01 00:00:00");
 
-    public static final String CHARSE_TNAME_31J = "Windows-31J";
+    public static final String CHARSET_NAME_31J = "Windows-31J";
 
     public static final Integer R05_DATE_SPLIT = 2310;
 
@@ -59,6 +59,9 @@ public class TableUtil {
     public static final String COL_CLASS = "COL_CLASS";
     public static final String COL_LENGTH = "COL_LENGTH";
     public static final String NUMERIC_SCALE = "NUMERIC_SCALE";
+
+
+    public static final String FILE_NAME = "file_name";
 
 
     public static final JdbcExecutionOptions jdbcExecutionOptions = JdbcExecutionOptions.builder().withBatchSize(1000) // 设置批处理大小
@@ -249,7 +252,7 @@ public class TableUtil {
             return dateTime;
         } catch (Exception e) {
             logger.error("file is {} ,message is {}", fileName, e.getMessage());
-            LocalDateTime dateTime = LocalDateTime.of(1990, 1, 1, 0, 0, 0);
+            LocalDateTime dateTime = LocalDateTime.of(1900, 1, 1, 0, 0, 0);
             return dateTime;
         }
     }
@@ -275,6 +278,20 @@ public class TableUtil {
         stmt.close();
         conn.close();
         return result;
+    }
+
+    public static int executeSelectSql(String sql) throws SQLException {
+        Connection conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
+        Statement stmt = conn.createStatement();
+        logger.info("executeSelectSql,select sql is {}", sql);
+        ResultSet rs = stmt.executeQuery(sql);
+        int maxSeq = 0;
+        if (rs.next()) {
+            maxSeq = rs.getInt(1);
+        }
+        rs.close();
+        conn.close();
+        return maxSeq;
     }
 
     public static String determineDateFormat(String dateStr, String[] formats) {
@@ -343,7 +360,7 @@ public class TableUtil {
                     sqlTypes[i] = Types.NUMERIC;
                     break;
                 case "timestamp without time zone":
-                    sqlTypes[i] = Types.DATE;
+                    sqlTypes[i] = Types.TIMESTAMP;
                     break;
                 default:
                     sqlTypes[i] = Types.VARCHAR;
@@ -385,11 +402,11 @@ public class TableUtil {
         return groupName;
     }
 
-    public static void setFieldValue(Row row, int rowIndex, String colClass, String dataValue) throws ParseException {
-        setFieldValue(row, rowIndex, colClass, dataValue, "0");
+    public static void setFieldValue(Row row, int rowIndex, String colClass, String dataValue, String tableName) throws ParseException {
+        setFieldValue(row, rowIndex, colClass, dataValue, "0", tableName);
     }
 
-    public static void setFieldValue(Row row, int rowIndex, String colClass, String dataValue, String numericScale) throws
+    public static void setFieldValue(Row row, int rowIndex, String colClass, String dataValue, String numericScale, String tableName) throws
             ParseException {
         switch (colClass) {
             case "numeric":
@@ -405,22 +422,23 @@ public class TableUtil {
                         row.setField(rowIndex, new BigDecimal(0));
                     }
                 } catch (Exception e) {
-                    logger.error("data is {},message is {}",dataValue,e.getMessage());
+                    logger.error("data is {},tableName is {}，message is {} ", dataValue, tableName, e.getMessage());
                     row.setField(rowIndex, new BigDecimal(0));
                 }
 
                 break;
             case "timestamp without time zone":
                 if (dataValue.contains("-")) {
-                    Date date = new Date(Timestamp.valueOf(dataValue).getTime());
-                    row.setField(rowIndex, date);
+                    Timestamp timestamp = Timestamp.valueOf(dataValue);
+                    row.setField(rowIndex, timestamp);
                 } else if (dataValue.contains("/")) {
                     String determineDateFormat = determineDateFormat(dataValue, possibleFormats);
                     if (!"未知格式".equals(determineDateFormat)) {
                         SimpleDateFormat sdf = new SimpleDateFormat(determineDateFormat);
                         long time = sdf.parse(dataValue).getTime();
-                        Date date = new Date(time);
-                        row.setField(rowIndex, date);
+                        // 从 Date 对象创建 Timestamp 对象
+                        Timestamp timestamp = new Timestamp(time);
+                        row.setField(rowIndex, timestamp);
                     }
                 }
                 break;
@@ -463,4 +481,39 @@ public class TableUtil {
         conn.close();
         return maxSeq;
     }
+
+    public static boolean deleteDataByFileName(String schema, String tableName, String fileName) {
+        Connection conn = null;
+        PreparedStatement prepareStatement = null;
+        try {
+            conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
+            StringBuilder sb = new StringBuilder();
+            sb.append("DELETE FROM ").append(schema).append(".").append(tableName);
+            sb.append(" WHERE ").append(FILE_NAME).append(" = ?");
+            logger.info("delete from sql is {} fileName is {}", sb.toString(), fileName);
+            prepareStatement = conn.prepareStatement(sb.toString());
+            prepareStatement.setString(1, fileName);
+            boolean execute = prepareStatement.execute();
+            return execute;
+        } catch (SQLException e) {
+            logger.error("Error executing delete statement", e);
+            return false;
+        } finally {
+            if (prepareStatement != null) {
+                try {
+                    prepareStatement.close();
+                } catch (SQLException e) {
+                    logger.error("Error closing PreparedStatement", e);
+                }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    logger.error("Error closing Connection", e);
+                }
+            }
+        }
+    }
+
 }

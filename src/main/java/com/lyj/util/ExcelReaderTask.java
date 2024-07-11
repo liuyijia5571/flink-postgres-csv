@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -17,27 +18,34 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import static com.lyj.util.ExcelUtil.getCellValue;
-import static com.lyj.util.TableUtil.COL_CLASS;
 import static com.lyj.util.TableUtil.COL_NAMES;
+import static com.lyj.util.TableUtil.FILE_NAME;
 import static com.lyj.util.TableUtil.getLocalDateTime;
 
-public class ExcelReaderTask implements Callable<List<List<Row>>> {
+public class ExcelReaderTask implements Callable<List> {
 
     private static final Logger logger = LoggerFactory.getLogger(ExcelReaderTask.class);
 
     private final String excelFilePath;
     private final Map<String, List<String>> columns;
 
+    private String fileName;
+
     public ExcelReaderTask(String filePath, Map<String, List<String>> columns) {
         this.excelFilePath = filePath;
         this.columns = columns;
     }
 
-    @Override
-    public List<List<Row>> call() throws Exception {
-        List<List<Row>> data = new ArrayList<>();
+    public ExcelReaderTask(String filePath, String fileName, Map<String, List<String>> columns) {
+        this.excelFilePath = filePath + File.separator + fileName;
+        this.fileName = fileName;
+        this.columns = columns;
+    }
 
-        List<String> colClassLiSt = columns.get(COL_CLASS);
+    @Override
+    public List call() throws Exception {
+        List data = new ArrayList<>();
+
         List<String> colNameList = columns.get(COL_NAMES);
         // 使用 Apache POI 读取 Excel 文件
         InputStream inputStream = new FileInputStream(excelFilePath);
@@ -50,6 +58,7 @@ public class ExcelReaderTask implements Callable<List<List<Row>>> {
             logger.error("data sheet is null file path is {}", excelFilePath);
             data.add(new ArrayList<>());
             data.add(new ArrayList<>());
+            data.add(fileName);
             return data;
         }
 
@@ -61,7 +70,6 @@ public class ExcelReaderTask implements Callable<List<List<Row>>> {
                 if (row.getLastCellNum() >= colNameList.size()) {
                     Row dataRow = new Row(colNameList.size() - 1);
                     for (int j = 1; j < colNameList.size(); j++) {
-                        String colClass = colClassLiSt.get(j);
                         String colName = colNameList.get(j);
                         if ("U16_発生年月日".equalsIgnoreCase(colName)) {
                             String dataValue = getCellValue(row.getCell(j + 1)).toString();
@@ -76,6 +84,10 @@ public class ExcelReaderTask implements Callable<List<List<Row>>> {
                         } else if ("U16_品名コード".equalsIgnoreCase(colName)) {
                             //j ==5 rowIndex 4 ,""
                             dataRow.setField(j - 1, "");
+                            maShinCode = true;
+                        } else if (FILE_NAME.equalsIgnoreCase(colName)) {
+                            //j ==5 rowIndex 4 ,""
+                            dataRow.setField(j - 1, fileName);
                             maShinCode = true;
                         } else {
                             if (!maShinCode) {
@@ -103,7 +115,6 @@ public class ExcelReaderTask implements Callable<List<List<Row>>> {
                 printTableHead(row, i, excelFilePath);
             }
         }
-
         // 读取 品目マスタ 的数据
         List<Row> maShinList = new ArrayList<>();
         Sheet maShinSheet = workbook.getSheet("品目マスタ");
@@ -111,6 +122,7 @@ public class ExcelReaderTask implements Callable<List<List<Row>>> {
             logger.error("maShin sheet is null file path is {}", excelFilePath);
             data.add(new ArrayList<>());
             data.add(new ArrayList<>());
+            data.add(fileName);
             return data;
         }
         for (int i = 0; i <= maShinSheet.getLastRowNum(); i++) {
@@ -138,10 +150,12 @@ public class ExcelReaderTask implements Callable<List<List<Row>>> {
         logger.info("excelFilePath is {},data size is {}", excelFilePath, dataList.size());
         data.add(dataList);
         data.add(maShinList);
+        //文件
+        data.add(fileName);
         return data;
     }
 
-    private static void printTableHead(org.apache.poi.ss.usermodel.Row row, int i, String excelFilePath) {
+    public static void printTableHead(org.apache.poi.ss.usermodel.Row row, int i, String excelFilePath) {
         StringBuilder sb = new StringBuilder();
         for (int j = 0; j < row.getLastCellNum(); j++) {
             Cell cell = row.getCell(j);
