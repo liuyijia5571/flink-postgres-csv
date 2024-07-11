@@ -4,7 +4,6 @@ import com.lyj.util.ConfigLoader;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.operators.JoinOperator;
 import org.apache.flink.api.java.operators.MapOperator;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.types.Row;
@@ -269,7 +268,10 @@ public class U15ToPostGreSql {
         boolean lastLine = false;
         for (int i = 0; i <= data2.getLastRowNum(); i++) {
             org.apache.poi.ss.usermodel.Row row = data2.getRow(i);
-            if (row == null || "*".equals(row.getCell(0))) {
+            if (row == null) {
+                break;
+            }
+            if( "*".equals(row.getCell(0))){
                 break;
             }
             int maShinCodeIndex = 13;

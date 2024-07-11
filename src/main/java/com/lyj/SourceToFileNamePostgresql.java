@@ -230,7 +230,7 @@ public class SourceToFileNamePostgresql {
             String tableName = entry.getKey();
             List<Tuple5> tableInfo = entry.getValue();
             Map<String, List<String>> columns = null;
-            if ("M03".equalsIgnoreCase((String) tableInfo.get(0).f0) || "M04".equalsIgnoreCase((String) tableInfo.get(0).f0)|| "M32".equalsIgnoreCase((String) tableInfo.get(0).f0)) {
+            if ("M03".equalsIgnoreCase((String) tableInfo.get(0).f0) || "M04".equalsIgnoreCase((String) tableInfo.get(0).f0) || "M32".equalsIgnoreCase((String) tableInfo.get(0).f0)) {
                 //有些文件没有日期，就是取最近的一份
                 if (!isTruncate) {
                     //清空表数据
@@ -241,7 +241,7 @@ public class SourceToFileNamePostgresql {
                 columns = getColumns(schema, tableName, isTruncate, true);
             }
             DataSet<Row> allFileContents = getAllFileContents(schema, inputFilePath, env, errList, tableName, tableInfo, columns, regexStr);
-            changeAndInsertDBData(schema, allFileContents, tableName, columns, regexStr);
+            changeAndInsertDBData(schema, allFileContents, tableName, columns);
         }
     }
 
@@ -249,17 +249,7 @@ public class SourceToFileNamePostgresql {
         insertJob(addSeqAndYearJob, schema, inputFilePath, env, errList, ",", isTruncate);
     }
 
-    /**
-     * get all table data
-     * @param inputFilePath
-     * @param env
-     * @param errList
-     * @param tableName
-     * @param tableInfo
-     * @param columns
-     * @return
-     * @throws Exception
-     */
+
     private static DataSet<Row> getAllFileContents(String schema, String inputFilePath, ExecutionEnvironment env, List<Tuple2> errList, String tableName, List<Tuple5> tableInfo, Map<String, List<String>> columns, String regexStr) throws Exception {
         // 用于存储所有文件内容的 DataSet
         DataSet<Row> allFileContents = null;
@@ -399,7 +389,7 @@ public class SourceToFileNamePostgresql {
                             int subStringIndex = 0;
                             char[] chars = line.toCharArray();
                             for (int i = 2; i < colLengths.size(); i++) {
-                                int colLength = Integer.valueOf(colLengths.get(i));
+                                int colLength = Integer.parseInt(colLengths.get(i));
                                 if (i < colLengths.size() - 1) {
                                     if (line.length() > subStringIndex + colLength) {
                                         char[] colChar = new char[colLength];
@@ -445,7 +435,7 @@ public class SourceToFileNamePostgresql {
                         String year = yearAndMon.substring(0, 2);
                         String mon = yearAndMon.substring(2, 4);
                         if ("03".equals(mon)) {
-                            year = String.format("%02d", Integer.valueOf(year) - 1);
+                            year = String.format("%02d", Integer.parseInt(year) - 1);
                         }
                         String date = "20" + year;
                         MapOperator<String, String> mapOperator = stringDataSource.map(u -> u + date);
@@ -479,14 +469,14 @@ public class SourceToFileNamePostgresql {
         return allFileContents;
     }
 
-    private static void changeAndInsertDBData(String schema, DataSet<Row> insertData, String tableName, Map<String, List<String>> columns, String regexStr) throws SQLException {
+    private static void changeAndInsertDBData(String schema, DataSet<Row> insertData, String tableName, Map<String, List<String>> columns) {
         if (insertData != null) {
             List<String> colNames = columns.get(COL_NAMES);
             insertDB(schema, colNames, tableName, columns, insertData);
         }
     }
 
-    private static MapOperator<String, Row> getStringRowMapOperator(DataSet<String> allFileContents, String schema, String tableName, Map<String, List<String>> columns, String regexStr, String fileName) throws SQLException {
+    private static MapOperator<String, Row> getStringRowMapOperator(DataSet<String> allFileContents, String schema, String tableName, Map<String, List<String>> columns, String regexStr, String fileName) {
         List<String> colNames = columns.get(COL_NAMES);
         List<String> colClass = columns.get(COL_CLASS);
         List<String> numericScaleList = columns.get(NUMERIC_SCALE);
@@ -514,7 +504,7 @@ public class SourceToFileNamePostgresql {
                 //set seq
                 int tableIndex = 0;
                 if (colNames.get(0).contains("レコード") || "seq_no".equalsIgnoreCase(colNames.get(0))) {
-                    setFieldValue(row, 0, colClass.get(0), String.valueOf(index), numericScaleList.get(0),tableName);
+                    setFieldValue(row, 0, colClass.get(0), String.valueOf(index), numericScaleList.get(0), tableName);
                     tableIndex = 1;
                 }
                 for (int i = tableIndex; i < colNames.size(); i++) {
@@ -523,30 +513,30 @@ public class SourceToFileNamePostgresql {
                     if (i > split.length) {
                         //处理共同字段
                         if (colName.equalsIgnoreCase("insert_job_id") || colName.equalsIgnoreCase("insert_pro_id") || colName.equalsIgnoreCase("upd_user_id") || colName.equalsIgnoreCase("upd_job_id") || colName.equalsIgnoreCase("upd_pro_id")) {
-                            setFieldValue(row, i, colClass.get(i), "", numericScale,tableName);
+                            setFieldValue(row, i, colClass.get(i), "", numericScale, tableName);
                         } else if (colName.equalsIgnoreCase("insert_user_id") || colName.equalsIgnoreCase("partition_flag")) {
-                            setFieldValue(row, i, colClass.get(i), tableName, numericScale,tableName);
+                            setFieldValue(row, i, colClass.get(i), tableName, numericScale, tableName);
                         } else if (colName.equalsIgnoreCase("upd_sys_date") || colName.equalsIgnoreCase("insert_sys_date")) {
-                            setFieldValue(row, i, colClass.get(i), NOW_DATE, numericScale,tableName);
+                            setFieldValue(row, i, colClass.get(i), NOW_DATE, numericScale, tableName);
                         } else if (colName.equalsIgnoreCase(FILE_NAME)) {
-                            setFieldValue(row, i, colClass.get(i), fileName, numericScale,tableName);
+                            setFieldValue(row, i, colClass.get(i), fileName, numericScale, tableName);
                         } else {
-                            setFieldValue(row, i, colClass.get(i), "", numericScale,tableName);
+                            setFieldValue(row, i, colClass.get(i), "", numericScale, tableName);
                         }
                     } else {
                         if (tableIndex == 0) {
                             if (colName.equalsIgnoreCase(FILE_NAME)) {
-                                setFieldValue(row, i, colClass.get(i), fileName, numericScale,tableName);
+                                setFieldValue(row, i, colClass.get(i), fileName, numericScale, tableName);
                             } else if (i == split.length) {
-                                setFieldValue(row, i, colClass.get(i), "", numericScale,tableName);
+                                setFieldValue(row, i, colClass.get(i), "", numericScale, tableName);
                             } else {
-                                setFieldValue(row, i, colClass.get(i), split[i].trim(), numericScale,tableName);
+                                setFieldValue(row, i, colClass.get(i), split[i].trim(), numericScale, tableName);
                             }
                         } else {
                             if (colName.equalsIgnoreCase(FILE_NAME)) {
-                                setFieldValue(row, i, colClass.get(i), fileName, numericScale,tableName);
+                                setFieldValue(row, i, colClass.get(i), fileName, numericScale, tableName);
                             } else {
-                                setFieldValue(row, i, colClass.get(i), split[i - 1].trim(), numericScale,tableName);
+                                setFieldValue(row, i, colClass.get(i), split[i - 1].trim(), numericScale, tableName);
                             }
                         }
                     }

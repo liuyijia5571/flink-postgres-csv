@@ -16,7 +16,6 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -373,7 +372,7 @@ public class TableUtil {
     }
 
     public static String getGroupName(String groupId) {
-        String groupName = "";
+        String groupName ;
         switch (groupId) {
             case "H":
             case "h":
@@ -412,7 +411,7 @@ public class TableUtil {
             case "numeric":
                 try {
                     if (StringUtils.isNotBlank(dataValue)) {
-                        int scale = Integer.valueOf(numericScale);
+                        int scale = Integer.parseInt(numericScale);
                         if (scale > 0) {
                             BigDecimal dataBigDecimal = new BigDecimal(dataValue).divideToIntegralValue(BigDecimal.TEN.pow(scale)).setScale(scale, RoundingMode.HALF_UP);
                             row.setField(rowIndex, dataBigDecimal);
@@ -490,7 +489,7 @@ public class TableUtil {
             StringBuilder sb = new StringBuilder();
             sb.append("DELETE FROM ").append(schema).append(".").append(tableName);
             sb.append(" WHERE ").append(FILE_NAME).append(" = ?");
-            logger.info("delete from sql is {} fileName is {}", sb.toString(), fileName);
+            logger.info("delete from sql is {} fileName is {}", sb, fileName);
             prepareStatement = conn.prepareStatement(sb.toString());
             prepareStatement.setString(1, fileName);
             boolean execute = prepareStatement.execute();
