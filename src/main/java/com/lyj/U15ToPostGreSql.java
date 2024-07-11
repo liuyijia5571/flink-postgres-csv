@@ -271,7 +271,7 @@ public class U15ToPostGreSql {
             if (row == null) {
                 break;
             }
-            if( "\\*".equals(row.getCell(0))){
+            if( "*".equals(row.getCell(0))){
                 break;
             }
             int maShinCodeIndex = 13;
