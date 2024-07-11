@@ -99,7 +99,7 @@ public class Test {
         StringBuilder sb = new StringBuilder();
         for (String sql : str.split("\n")) {
             int count = executeSelectSql(sql);
-            sb.append(sql + " ; -- " + count).append("\n");
+            sb.append(sql).append(" ; -- ").append(count).append("\n");
         }
         System.out.println(sb);
 

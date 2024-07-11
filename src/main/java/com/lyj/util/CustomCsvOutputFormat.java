@@ -51,12 +51,6 @@ public class CustomCsvOutputFormat implements OutputFormat<String> {
         }
     }
 
-    public static OutputFormat getOutputFormat(String inputPath, String formattedDate) {
-        String outputPath = inputPath + File.separator + "file_record_" + formattedDate + ".csv";
-        OutputFormat customCsvOutputFormat = new CustomCsvOutputFormat(outputPath, FileSystem.WriteMode.OVERWRITE);
-        return customCsvOutputFormat;
-    }
-
     public static String getFormattedDate() {
         // 获取当前时间的时间戳
         long currentTimeMillis = System.currentTimeMillis();

@@ -120,7 +120,7 @@ public class ConvertMashin00Code {
         DataSource<String> stringDataSource = env.readTextFile(folderPath);
         DataSet<Tuple5> csvData = stringDataSource.map(new MapFunction<String, Tuple5>() {
             @Override
-            public Tuple5 map(String s) throws Exception {
+            public Tuple5 map(String s) {
                 Tuple5 tuple5 = new Tuple5();
                 String[] split = s.split("\t");
                 if (split.length >= 5) {
@@ -146,29 +146,23 @@ public class ConvertMashin00Code {
 
         JoinOperator<Row, Tuple5, Tuple3> resultData = dataStream.rightOuterJoin(csvData)
                 .where(row -> row.getField(finalIndex).toString())
-                .equalTo(3).with(new JoinFunction<Row, Tuple5, Tuple3>() {
-            @Override
-            public Tuple3 join(Row row, Tuple5 tuple5) throws Exception {
-                Tuple3 tuple3 = new Tuple3<>();
-                if (row == null) {
-                    tuple3.f0 = "right";
-                    tuple3.f1 = new Row(rowTypeInfo.getArity());
-                } else {
-                    tuple3.f0 = "insert";
-                    tuple3.f1 = row;
-                }
-                tuple3.f2 = tuple5;
-                return tuple3;
-            }
-        }).returns(TUPLE(Types.STRING, Types.ROW(rowTypeInfo.getFieldTypes()), TUPLE(csvTypes)));
+                .equalTo(3).with((row, tuple5) ->
+                        {
+                            Tuple3 tuple3 = new Tuple3<>();
+                            if (row == null) {
+                                tuple3.f0 = "right";
+                                tuple3.f1 = new Row(rowTypeInfo.getArity());
+                            } else {
+                                tuple3.f0 = "insert";
+                                tuple3.f1 = row;
+                            }
+                            tuple3.f2 = tuple5;
+                            return tuple3;
+                        }
+                ).returns(TUPLE(Types.STRING, Types.ROW(rowTypeInfo.getFieldTypes()), TUPLE(csvTypes)));
 
         //写入未配对的数据
-        DataSet<Tuple5> rightData = resultData.filter(tuple3 -> "right".equals(tuple3.f0)).map(new MapFunction<Tuple3, Tuple5>() {
-            @Override
-            public Tuple5 map(Tuple3 tuple3) {
-                return (Tuple5) tuple3.f2;
-            }
-        }).returns(TUPLE(csvTypes));
+        DataSet<Tuple5> rightData = resultData.filter(tuple3 -> "right".equals(tuple3.f0)).map(tuple3 -> (Tuple5) tuple3.f2).returns(TUPLE(csvTypes));
 
         rightData.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
 

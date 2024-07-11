@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -285,7 +284,7 @@ public class SourceToFileNamePostgresql {
                         String f0 = (String) tuple5.f0;
                         int indexOf = f0.length();
                         String date = ((String) tuple5.f2).substring(indexOf + 1, indexOf + 5);
-                        int dateInt = Integer.valueOf(date);
+                        int dateInt = Integer.parseInt(date);
                         if (dateInt >= R05_DATE_SPLIT) {
                             MapOperator<String, String> mapOperator = stringDataSource.map(line -> {
                                 String[] split = line.split(regexStr, -1);
@@ -343,7 +342,7 @@ public class SourceToFileNamePostgresql {
                         List<String> finalNewColName = newColName;
                         MapOperator<String, String> mapOperator = stringDataSource.map(new MapFunction<String, String>() {
                             @Override
-                            public String map(String line) throws Exception {
+                            public String map(String line) {
                                 String[] split = line.split(regexStr, -1);
                                 StringBuilder lineStr = new StringBuilder();
                                 if (finalNewColName != null) {
