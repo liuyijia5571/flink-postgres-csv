@@ -1,7 +1,6 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
-import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
@@ -118,28 +117,27 @@ public class ConvertMashin00Code {
         //读取txt 数据，
         TypeInformation<?>[] csvTypes = {Types.STRING, Types.STRING, Types.STRING, Types.STRING, Types.STRING};
         DataSource<String> stringDataSource = env.readTextFile(folderPath);
-        DataSet<Tuple5> csvData = stringDataSource.map(new MapFunction<String, Tuple5>() {
-            @Override
-            public Tuple5 map(String s) {
-                Tuple5 tuple5 = new Tuple5();
-                String[] split = s.split("\t");
-                if (split.length >= 5) {
-                    for (int i = 0; i < split.length; i++) {
-                        if (1 == i) {
-                            String s1 = split[i];
-                            String value = s1;
-                            for (int j = 0; j < 6; j++) {
-                                if (j >= s1.length()) {
-                                    value += 0;
+        DataSet<Tuple5> csvData = stringDataSource.map(s ->
+                {
+                    Tuple5 tuple5 = new Tuple5();
+                    String[] split = s.split("\t");
+                    if (split.length >= 5) {
+                        for (int i = 0; i < split.length; i++) {
+                            if (1 == i) {
+                                String s1 = split[i];
+                                String value = s1;
+                                for (int j = 0; j < 6; j++) {
+                                    if (j >= s1.length()) {
+                                        value += 0;
+                                    }
                                 }
-                            }
-                            tuple5.setField(value, i);
-                        } else tuple5.setField(split[i], i);
+                                tuple5.setField(value, i);
+                            } else tuple5.setField(split[i], i);
+                        }
                     }
+                    return tuple5;
                 }
-                return tuple5;
-            }
-        }).returns(TUPLE(csvTypes));
+        ).returns(TUPLE(csvTypes));
 
         int maxSeq = getMaxSeq(schema, INSERT_TABLE_NAME, SEQ_COL);
         int finalIndex = index;
@@ -172,7 +170,6 @@ public class ConvertMashin00Code {
         TypeInformation<?>[] insertTypes = insertRowTypeInfo.getFieldTypes();
         DataSet<Row> insertData = resultData.filter(tuple3 -> "insert".equals(tuple3.f0)).map(new MapFunction<Tuple3, Row>() {
             private long count = 0;
-
             @Override
             public Row map(Tuple3 tuple3) {
                 count++;

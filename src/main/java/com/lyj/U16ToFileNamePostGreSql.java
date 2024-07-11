@@ -133,7 +133,7 @@ public class U16ToFileNamePostGreSql {
     }
 
 
-    private static DataSet<Row> addSeq(String schema, DataSet<Row> newDataDs, String tableName, String fileName, Map<String, List<String>> columns) throws SQLException {
+    private static DataSet<Row> addSeq(String schema, DataSet<Row> newDataDs, String tableName, String fileName, Map<String, List<String>> columns) {
         List<String> colNames = columns.get(COL_NAMES);
         List<String> colClass = columns.get(COL_CLASS);
 
@@ -158,14 +158,14 @@ public class U16ToFileNamePostGreSql {
                 //set seq
                 int tableIndex = 0;
                 if (colNames.get(0).contains("レコード") || "seq_no".equalsIgnoreCase(colNames.get(0))) {
-                    setFieldValue(row, 0, colClass.get(0), String.valueOf(index),tableName);
+                    setFieldValue(row, 0, colClass.get(0), String.valueOf(index), tableName);
                     tableIndex = 1;
                 }
                 for (int i = tableIndex; i < colNames.size(); i++) {
                     if (tableIndex == 1) {
-                        setFieldValue(row, i, colClass.get(i), (String) line.getField(i - 1),tableName);
+                        setFieldValue(row, i, colClass.get(i), (String) line.getField(i - 1), tableName);
                     } else {
-                        setFieldValue(row, i, colClass.get(i), (String) line.getField(i),tableName);
+                        setFieldValue(row, i, colClass.get(i), (String) line.getField(i), tableName);
                     }
                 }
                 return row;

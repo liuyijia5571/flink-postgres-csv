@@ -2,12 +2,10 @@ package com.lyj.util;
 
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.core.fs.FileSystem.WriteMode;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;

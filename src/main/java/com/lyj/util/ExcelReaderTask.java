@@ -31,11 +31,6 @@ public class ExcelReaderTask implements Callable<List> {
 
     private String fileName;
 
-    public ExcelReaderTask(String filePath, Map<String, List<String>> columns) {
-        this.excelFilePath = filePath;
-        this.columns = columns;
-    }
-
     public ExcelReaderTask(String filePath, String fileName, Map<String, List<String>> columns) {
         this.excelFilePath = filePath + File.separator + fileName;
         this.fileName = fileName;
