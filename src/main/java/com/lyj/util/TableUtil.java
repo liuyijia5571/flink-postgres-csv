@@ -29,6 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,21 @@ public class TableUtil {
 
 
     public static final String FILE_NAME = "file_name";
+
+    public static final String NOW_DATE;
+
+    static {
+        // 获取当前时间的时间戳
+        long currentTimeMillis = System.currentTimeMillis();
+
+        // 创建日期对象
+        Date date = new Date(currentTimeMillis);
+
+        // 定义日期格式
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        NOW_DATE = dateFormat.format(date);
+    }
 
 
     public static final JdbcExecutionOptions jdbcExecutionOptions = JdbcExecutionOptions.builder().withBatchSize(1000) // 设置批处理大小

@@ -17,9 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +32,7 @@ import static com.lyj.util.TableUtil.COL_NAMES;
 import static com.lyj.util.TableUtil.FILE_NAME;
 import static com.lyj.util.TableUtil.I34;
 import static com.lyj.util.TableUtil.M03;
+import static com.lyj.util.TableUtil.NOW_DATE;
 import static com.lyj.util.TableUtil.NUMERIC_SCALE;
 import static com.lyj.util.TableUtil.R05_DATE_SPLIT;
 import static com.lyj.util.TableUtil.deleteDataByFileName;
@@ -57,20 +56,7 @@ public class SourceToFileNamePostgresql {
 
     private static final String ADD_SEQ_AND_DATE = "ADD_SEQ_AND_DATE";
 
-    private static final String NOW_DATE;
 
-    static {
-        // 获取当前时间的时间戳
-        long currentTimeMillis = System.currentTimeMillis();
-
-        // 创建日期对象
-        Date date = new Date(currentTimeMillis);
-
-        // 定义日期格式
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-        NOW_DATE = dateFormat.format(date);
-    }
 
     public static void main(String[] args) throws Exception {
 

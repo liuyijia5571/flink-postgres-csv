@@ -170,7 +170,7 @@ public class U15ToPostGreSql {
         return addM05Ds;
     }
 
-    private static List<Row> getDataRowList(Workbook workbook, String inputFile, String sheetName) {
+    private static List<Row> getDataRowList(Workbook workbook, String inputFile, String sheetName) throws Exception {
         List<Row> dataRowList = new ArrayList<>();
         Sheet data = workbook.getSheet(sheetName);
         if (data == null) {
@@ -202,7 +202,7 @@ public class U15ToPostGreSql {
      * F列是 実品名
      * J-N列是长印的CODE
      */
-    private static List<Row> getData1RowList(Workbook workbook, String inputFile, List<String> colNameList) {
+    private static List<Row> getData1RowList(Workbook workbook, String inputFile, List<String> colNameList) throws Exception {
         // 读取 数据
         Sheet data1 = workbook.getSheet("レンゴーに紐づく品番");
 
@@ -257,7 +257,7 @@ public class U15ToPostGreSql {
      * G-K列是长印的CODE
      * Q列是 実品名
      */
-    private static List<Row> getData2RowList(Workbook workbook, String inputFile, List<String> colNameList) {
+    private static List<Row> getData2RowList(Workbook workbook, String inputFile, List<String> colNameList) throws Exception {
         List<Row> data2RowList = new ArrayList<>();
         Sheet data2 = workbook.getSheet("レンゴーに紐づかない品番");
         if (data2 == null) {

@@ -53,6 +53,8 @@ public class TsvToPostgreSQL {
         // 创建流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
+        env.setParallelism(1);
+
         File folder = new File(folderPath);
         StringBuffer sb = new StringBuffer();
         if (folder.exists()) {
@@ -77,7 +79,7 @@ public class TsvToPostgreSQL {
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 
                             sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").
-                                    append(schemaName).append(".").append(tableName).append(" ;\n");
+                                    append(schemaName).append(".").append(tableName).append(" order by seq_no ;\n");
 
                             logger.info("insertSql is {}", insertSql);
                             // 读取 CSV 文件并创建 DataStream
