@@ -84,7 +84,6 @@ public class ExcelUtil {
         } catch (Exception e) {
             logger.error("Failed to evaluate cell: {}", cell.getAddress());
             logger.error("Cell value: {}", cell);
-            e.printStackTrace();
             throw new Exception(e.getMessage());
         }
         return cellValue;

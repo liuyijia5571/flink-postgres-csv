@@ -29,7 +29,7 @@ public class ExcelReaderTask implements Callable<List> {
     private final String excelFilePath;
     private final Map<String, List<String>> columns;
 
-    private String fileName;
+    private final String fileName;
 
     public ExcelReaderTask(String filePath, String fileName, Map<String, List<String>> columns) {
         this.excelFilePath = filePath + File.separator + fileName;
