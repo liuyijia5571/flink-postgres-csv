@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
-import static com.lyj.util.CustomCsvOutputFormat.getFormattedDate;
+import static com.lyj.util.TableUtil.getFormattedDate;
 import static com.lyj.util.TableUtil.COL_CLASS;
 import static com.lyj.util.TableUtil.COL_NAMES;
 import static com.lyj.util.TableUtil.FILE_NAME;

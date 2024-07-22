@@ -387,6 +387,26 @@ public class TableUtil {
         return sqlTypes;
     }
 
+    public static TypeInformation [] getTypeInformationArr(Map<String, List<String>> columns) {
+        List<String> colClass = columns.get("COL_CLASS");
+        TypeInformation<?>[] rowTypes =  new TypeInformation[colClass.size()];
+        for (int i = 0; i < colClass.size(); i++) {
+            String columnType = colClass.get(i);
+            switch (columnType) {
+                case "numeric":
+                    rowTypes[i] = org.apache.flink.api.common.typeinfo.Types.BIG_DEC;
+                    break;
+                case "timestamp without time zone":
+                    rowTypes[i] = org.apache.flink.api.common.typeinfo.Types.SQL_DATE;
+                    break;
+                default:
+                    rowTypes[i] =org.apache.flink.api.common.typeinfo.Types.STRING;
+                    break;
+            }
+        }
+        return rowTypes;
+    }
+
     public static String getGroupName(String groupId) {
         String groupName ;
         switch (groupId) {
@@ -531,4 +551,19 @@ public class TableUtil {
         }
     }
 
+
+    public static String getFormattedDate() {
+        // 获取当前时间的时间戳
+        long currentTimeMillis = System.currentTimeMillis();
+
+        // 创建日期对象
+        Date date = new Date(currentTimeMillis);
+
+        // 定义日期格式
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+        // 将日期对象格式化为字符串
+        String formattedDate = dateFormat.format(date);
+        return formattedDate;
+    }
 }

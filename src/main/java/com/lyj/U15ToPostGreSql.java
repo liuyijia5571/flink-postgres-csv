@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
-import static com.lyj.util.CustomCsvOutputFormat.getFormattedDate;
+import static com.lyj.util.TableUtil.getFormattedDate;
 import static com.lyj.util.ExcelReaderTask.printTableHead;
 import static com.lyj.util.ExcelUtil.getCellValue;
 import static com.lyj.util.TableUtil.COL_CLASS;
