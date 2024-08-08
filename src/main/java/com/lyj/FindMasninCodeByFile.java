@@ -34,7 +34,7 @@ public class FindMasninCodeByFile {
 
         boolean checkParamsResult = checkParams(inputPath, masninCodeFile);
         if (!checkParamsResult) {
-            logger.error("params demo : " + "--db_profile dev43  \n" + "--input_file_path C:\\Â‰Ê\\‰©M’†—v“I”˜@\n" + "--schema xuexiaodingtest2 \n");
+            logger.error("params demo : " + "--db_profile dev43  \n" + "--input_file_path C:\\é’æœ\\é»„ä¿¡ä¸­è¦çš„æ•°æ®ã€€\n" + "--schema xuexiaodingtest2 \n");
             return;
         }
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
@@ -73,12 +73,12 @@ public class FindMasninCodeByFile {
                 }
             }
         }
-        // ?Œš CsvOutputFormat
+        // åˆ›å»º CsvOutputFormat
         CsvOutputFormat<Tuple2> csvOutputFormat = new CsvOutputFormat<>(new Path(resultFile));
         csvOutputFormat.setWriteMode(FileSystem.WriteMode.OVERWRITE);
-        csvOutputFormat.setCharsetName(CHARSET_NAME_31J); // w’è??Ši®
+        csvOutputFormat.setCharsetName(CHARSET_NAME_31J); // æŒ‡å®šç¼–ç æ ¼å¼
 
-        // « DataSet Ê“ü CSV •¶Œ
+        // å°† DataSet å†™å…¥ CSV æ–‡ä»¶
         allResultDs.output(csvOutputFormat).setParallelism(1);
 
         env.execute(FindMasninCodeByFile.class.getName() + "_" + getFormattedDate());

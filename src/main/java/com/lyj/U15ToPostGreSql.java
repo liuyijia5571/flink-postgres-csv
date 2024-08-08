@@ -1,6 +1,7 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -145,11 +147,11 @@ public class U15ToPostGreSql {
                 int tableIndex = 0;
                 if (colNames.get(0).contains("レコード") || "seq_no".equalsIgnoreCase(colNames.get(0))) {
                     int seqNo = maxSeq + index;
-                    setFieldValue(newRow, 0, colClass.get(0), String.valueOf(seqNo), numericScaleList.get(0),INSERT_TABLE_NAME);
+                    setFieldValue(newRow, 0, colClass.get(0), String.valueOf(seqNo), numericScaleList.get(0), INSERT_TABLE_NAME);
                     tableIndex = 1;
                 }
                 for (int i = tableIndex; i < colNames.size(); i++) {
-                    setFieldValue(newRow, i, colClass.get(i), (String) row.getField(i), numericScaleList.get(i),INSERT_TABLE_NAME);
+                    setFieldValue(newRow, i, colClass.get(i), (String) row.getField(i), numericScaleList.get(i), INSERT_TABLE_NAME);
                 }
                 return newRow;
             }
@@ -161,8 +163,32 @@ public class U15ToPostGreSql {
 
     private static DataSet<Row> getRowDataSet(DataSet<Row> mo5Ds, DataSet<Row> allDataSet, int index) {
         DataSet<Row> addM05Ds = mo5Ds.join(allDataSet)
-                .where(u -> u.getField(0).toString())
-                .equalTo(u -> u.getField(index).toString())
+                .where(u -> {
+                    String str = u.getField(0).toString();
+                    if (StringUtils.isNotBlank(str)) {
+                        double numericValue = Double.parseDouble(str);
+                        // 检查是否是整数
+                        if (numericValue == (long) numericValue) {
+                            return new BigDecimal((long) numericValue);
+                        } else {
+                            return new BigDecimal(str);
+                        }
+                    }
+                    return new BigDecimal(-2);
+                })
+                .equalTo(u -> {
+                    String str = u.getField(index).toString();
+                    if (StringUtils.isNotBlank(str)) {
+                        double numericValue = Double.parseDouble(str);
+                        // 检查是否是整数
+                        if (numericValue == (long) numericValue) {
+                            return new BigDecimal((long) numericValue);
+                        } else {
+                            return new BigDecimal(str);
+                        }
+                    }
+                    return new BigDecimal(-1);
+                })
                 .with((row1, row2) -> {
                     row2.setField(index, row1.getField(1));
                     return row2;
@@ -271,7 +297,7 @@ public class U15ToPostGreSql {
             if (row == null) {
                 break;
             }
-            if( "*".equals(row.getCell(0))){
+            if ("*".equals(row.getCell(0))) {
                 break;
             }
             int maShinCodeIndex = 13;

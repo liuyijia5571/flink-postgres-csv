@@ -42,7 +42,7 @@ public class TableUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(TableUtil.class);
 
-    public static final String[] possibleFormats = {"yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm:ss.SSS"};
+    public static final String[] possibleFormats = {"yyyy/MM/dd HH:mm:ss.SSS","yyyy/MM/dd HH:mm:ss"};
 
     public static final Timestamp timestampDate = Timestamp.valueOf("1990-01-01 00:00:00");
 
@@ -97,6 +97,7 @@ public class TableUtil {
         String valStr = colNames.stream().map(u -> " ? ").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
         sb.append(valStr);
         sb.append(")");
+        logger.debug("insert sql is {}", sb);
         return sb.toString();
     }
 
@@ -237,7 +238,7 @@ public class TableUtil {
                 break;
             default:
                 if (dataValue != null)
-                    ps.setString(parameterIndex, dataValue.trim());
+                    ps.setString(parameterIndex, dataValue);
                 else
                     ps.setString(parameterIndex, dataValue);
                 break;
@@ -387,20 +388,20 @@ public class TableUtil {
         return sqlTypes;
     }
 
-    public static TypeInformation [] getTypeInformationArr(Map<String, List<String>> columns) {
+    public static TypeInformation[] getTypeInformationArr(Map<String, List<String>> columns) {
         List<String> colClass = columns.get("COL_CLASS");
-        TypeInformation<?>[] rowTypes =  new TypeInformation[colClass.size()];
+        TypeInformation<?>[] rowTypes = new TypeInformation[colClass.size()];
         for (int i = 0; i < colClass.size(); i++) {
             String columnType = colClass.get(i);
             switch (columnType) {
                 case "numeric":
-                    rowTypes[i] = org.apache.flink.api.common.typeinfo.Types.BIG_DEC;
+                    rowTypes[i] = BasicTypeInfo.BIG_DEC_TYPE_INFO;
                     break;
                 case "timestamp without time zone":
-                    rowTypes[i] = org.apache.flink.api.common.typeinfo.Types.SQL_DATE;
+                    rowTypes[i] = BasicTypeInfo.DATE_TYPE_INFO;
                     break;
                 default:
-                    rowTypes[i] =org.apache.flink.api.common.typeinfo.Types.STRING;
+                    rowTypes[i] = BasicTypeInfo.STRING_TYPE_INFO;
                     break;
             }
         }
@@ -408,7 +409,7 @@ public class TableUtil {
     }
 
     public static String getGroupName(String groupId) {
-        String groupName ;
+        String groupName;
         switch (groupId) {
             case "H":
             case "h":
@@ -445,6 +446,7 @@ public class TableUtil {
             ParseException {
         switch (colClass) {
             case "numeric":
+                dataValue = dataValue.trim();
                 try {
                     if (StringUtils.isNotBlank(dataValue)) {
                         int scale = Integer.parseInt(numericScale);
@@ -463,6 +465,7 @@ public class TableUtil {
 
                 break;
             case "timestamp without time zone":
+                dataValue = dataValue.trim();
                 if (dataValue.contains("-")) {
                     Timestamp timestamp = Timestamp.valueOf(dataValue);
                     row.setField(rowIndex, timestamp);
@@ -478,7 +481,7 @@ public class TableUtil {
                 }
                 break;
             default:
-                row.setField(rowIndex, dataValue.trim());
+                row.setField(rowIndex, dataValue);
                 break;
         }
 

@@ -19,7 +19,7 @@ public class MasDai00Join {
     public static void main(String[] args) throws Exception {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
-        // ’Ê?–½—ßsŽQ—ˆ??”z’u•¶Œ
+        // é€šè¿‡å‘½ä»¤è¡Œå‚æ¥èŽ·å–é…ç½®æ–‡ä»¶
 
         String inputFile = params.get("input_file");
 

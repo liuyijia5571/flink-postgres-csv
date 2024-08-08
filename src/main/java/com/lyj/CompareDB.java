@@ -1,6 +1,7 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
+import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.DataSet;
@@ -18,6 +19,7 @@ import org.apache.flink.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,7 @@ import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.ConfigLoader.getDatabasePassword;
 import static com.lyj.util.ConfigLoader.getDatabaseUrl;
 import static com.lyj.util.ConfigLoader.getDatabaseUsername;
+import static com.lyj.util.TableUtil.COL_CLASS;
 import static com.lyj.util.TableUtil.getFormattedDate;
 import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.COL_NAMES;
@@ -56,7 +59,7 @@ public class CompareDB {
         String newTable = params.get("new_table");
 
         //result_file
-        String resultFile = params.get("result_file","output/result.csv");
+        String resultFile = params.get("result_file", "output/" + oldTable + "_result.csv");
 
         boolean checkParamsResult = checkParams(activeProfile, oldSchema, newSchema, oldTable, newTable);
         if (!checkParamsResult) {
@@ -67,24 +70,27 @@ public class CompareDB {
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
         ConfigLoader.loadConfiguration(activeProfile);
-        Map<String, List<String>> oldColumns = getColumns(oldSchema, oldTable);
+        Map<String, List<String>> oldColumns = getColumns(oldSchema, oldTable, false, true);
         List<String> oldColNames = oldColumns.get(COL_NAMES);
+        List<String> colClass = oldColumns.get(COL_CLASS);
         RowTypeInfo oldRowTypeInfo = getRowTypeInfo(oldColumns);
         StringBuilder selectOldSql = new StringBuilder();
         String oldCollStr = oldColNames.stream().map(u -> "\"" + u + "\"").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
         selectOldSql.append("SELECT ").append(oldCollStr).append(" FROM ").append(oldSchema).append(".").append(oldTable);
+//                .append(" where seq_no = 7348");
 
         TypeInformation[] typeInformationArr = getTypeInformationArr(oldColumns);
 
         JdbcInputFormat oldFinish = JdbcInputFormat.buildJdbcInputFormat().setDrivername("org.postgresql.Driver").setDBUrl(getDatabaseUrl()).setUsername(getDatabaseUsername()).setPassword(getDatabasePassword()).setQuery(selectOldSql.toString()).setRowTypeInfo(oldRowTypeInfo).finish();
         DataSource<Row> oldDataSet = env.createInput(oldFinish);
 
-        Map<String, List<String>> newColumns = getColumns(newSchema, newTable);
+        Map<String, List<String>> newColumns = getColumns(newSchema, newTable, false, true);
         List<String> newColNames = newColumns.get(COL_NAMES);
         RowTypeInfo newRowTypeInfo = getRowTypeInfo(newColumns);
         StringBuilder selectNewSql = new StringBuilder();
         String newCollStr = newColNames.stream().map(u -> "\"" + u + "\"").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
         selectNewSql.append("SELECT ").append(newCollStr).append(" FROM ").append(newSchema).append(".").append(newTable);
+//                .append(" where seq_no = 4310");
         JdbcInputFormat newFinish = JdbcInputFormat.buildJdbcInputFormat().setDrivername("org.postgresql.Driver").setDBUrl(getDatabaseUrl()).setUsername(getDatabaseUsername()).setPassword(getDatabasePassword()).setQuery(selectNewSql.toString()).setRowTypeInfo(newRowTypeInfo).finish();
         DataSource<Row> newDataSet = env.createInput(newFinish);
 
@@ -106,16 +112,36 @@ public class CompareDB {
                         tuple2.f1 = row1;
                     }
                     return tuple2;
-                })
-                .returns(Types.TUPLE(Types.STRING, Types.ROW(typeInformationArr)));
+                }).returns(Types.TUPLE(Types.STRING, Types.ROW(typeInformationArr)));
 
         // 创建 CsvOutputFormat
-        CsvOutputFormat<Tuple2<String,Row>> csvOutputFormat = new CsvOutputFormat<>(new Path(resultFile));
+        CsvOutputFormat<Tuple2<String, Row>> csvOutputFormat = new CsvOutputFormat<>(new Path(resultFile));
         csvOutputFormat.setWriteMode(FileSystem.WriteMode.OVERWRITE);
         csvOutputFormat.setCharsetName(CHARSET_NAME_31J); // 指定编码格式
 
         // 将 DataSet 写入 CSV 文件
-        resultDS.output(csvOutputFormat).setParallelism(1);
+        TypeInformation<?>[] rowTypes = new TypeInformation[colClass.size()];
+        for (int i = 0; i < colClass.size(); i++) {
+            rowTypes[i] = BasicTypeInfo.STRING_TYPE_INFO;
+        }
+
+        DataSet<Tuple2<String, Row>> resultStrDs = resultDS.map(u -> {
+            Row row = u.f1;
+            for (int i = 0; i < row.getArity(); i++) {
+                String classStr = colClass.get(i);
+                Object colValue = row.getField(i);
+                if (colValue != null) {
+                    if (classStr.contains("character")) {
+                        row.setField(i, "\"" + colValue + "\"");
+                    } else {
+                        row.setField(i, colValue.toString());
+                    }
+                }
+            }
+            return u;
+        }).returns(Types.TUPLE(Types.STRING, Types.ROW(rowTypes)));
+
+        resultStrDs.output(csvOutputFormat).setParallelism(1);
 
         env.execute(CompareDB.class.getName() + "_" + getFormattedDate());
     }
@@ -127,11 +153,16 @@ public class CompareDB {
         }
         StringBuilder sb = new StringBuilder();
         for (int i = offset; i < row.getArity(); ++i) {
+            if (row.getField(i) instanceof Date) {
+                continue;
+            }
             if (i > offset) {
-                sb.append(",");
+                sb.append("|");
             }
             sb.append(StringUtils.arrayAwareToString(row.getField(i)));
         }
+//        logger.info("row is {}", row);
+//        logger.info("join sb is {}", sb);
         return sb.toString();
     }
 

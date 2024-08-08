@@ -57,7 +57,6 @@ public class SourceToFileNamePostgresql {
     private static final String ADD_SEQ_AND_DATE = "ADD_SEQ_AND_DATE";
 
 
-
     public static void main(String[] args) throws Exception {
 
 
@@ -303,12 +302,16 @@ public class SourceToFileNamePostgresql {
                         String f0 = (String) tuple5.f0;
                         int indexOf = f0.length();
                         String date = ((String) tuple5.f2).substring(indexOf + 1, indexOf + 7);
+                        if (date.endsWith(".c")) {
+                            date = date.substring(0, 4) + "01";
+                        }
+                        String finalDate = date;
                         MapOperator<String, String> mapOperator = stringDataSource.map(line -> {
                             String[] split = line.split(regexStr, -1);
                             StringBuilder lineStr = new StringBuilder();
                             for (int i = 0; i < split.length; i++) {
                                 if (i == 3) {
-                                    lineStr.append(date).append(regexStr);
+                                    lineStr.append(finalDate).append(regexStr);
                                 }
                                 lineStr.append(split[i]);
                                 if (i < split.length - 1) lineStr.append(regexStr);
@@ -515,13 +518,13 @@ public class SourceToFileNamePostgresql {
                             } else if (i == split.length) {
                                 setFieldValue(row, i, colClass.get(i), "", numericScale, tableName);
                             } else {
-                                setFieldValue(row, i, colClass.get(i), split[i].trim(), numericScale, tableName);
+                                setFieldValue(row, i, colClass.get(i), split[i], numericScale, tableName);
                             }
                         } else {
                             if (colName.equalsIgnoreCase(FILE_NAME)) {
                                 setFieldValue(row, i, colClass.get(i), fileName, numericScale, tableName);
                             } else {
-                                setFieldValue(row, i, colClass.get(i), split[i - 1].trim(), numericScale, tableName);
+                                setFieldValue(row, i, colClass.get(i), split[i - 1], numericScale, tableName);
                             }
                         }
                     }
