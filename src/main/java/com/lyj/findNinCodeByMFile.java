@@ -4,7 +4,6 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.operators.FilterOperator;
-import org.apache.flink.api.java.operators.JoinOperator;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.poi.ss.usermodel.Row;
@@ -66,7 +65,7 @@ public class findNinCodeByMFile {
             for (int i = 0; i < files.length; i++) {
                 String fileName = files[i].getName();
                 FilterOperator<String> leftJoinDs = null;
-                FilterOperator<String> stringDataSource = env.readTextFile(ninCodeFilePath + File.separator + fileName, CHARSET_NAME_31J).filter(line -> !"".equals(line));;
+                FilterOperator<String> stringDataSource = env.readTextFile(ninCodeFilePath + File.separator + fileName, CHARSET_NAME_31J).filter(line -> !"".equals(line));
                 // 创建 Pattern 对象
 
                 Matcher matcher = compiledPattern.matcher(fileName);

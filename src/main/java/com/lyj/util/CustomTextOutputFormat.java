@@ -28,7 +28,7 @@ public class CustomTextOutputFormat<T> extends FileOutputFormat<T> {
     }
 
     @Override
-    public void writeRecord(T record) throws IOException {
+    public void writeRecord(T record) {
         writer.print(record.toString());
         writer.print(lineDelimiter); // 使用自定义换行符
     }
