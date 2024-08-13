@@ -1,26 +1,31 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
+import org.apache.flink.api.java.utils.ParameterTool;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.TableUtil.executeSql;
 
 public class DDLCommand {
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length < 2) {
-            System.err.println("args.length  < 2");
-            return;
-        }
 
-        ConfigLoader.loadConfiguration(args[0]);
+        final ParameterTool params = ParameterTool.fromArgs(args);
+        // 通过命令行参来选择配置文件
 
-        String folderPath = args[1];
+        String activeProfile = params.get(DB_PROFILE,"data_prod");
+
+        String exeFolderPath = params.get("DDL_PATH","C:\\青果\\黄信中要的数据\\data_0612\\DDL");
+
+        ConfigLoader.loadConfiguration(activeProfile);
+
+        String folderPath = exeFolderPath;
         File folder = new File(folderPath);
         if (folder.exists()) {
             File[] files = folder.listFiles();

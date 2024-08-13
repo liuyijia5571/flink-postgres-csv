@@ -42,7 +42,7 @@ public class TableUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(TableUtil.class);
 
-    public static final String[] possibleFormats = {"yyyy/MM/dd HH:mm:ss.SSS","yyyy/MM/dd HH:mm:ss"};
+    public static final String[] possibleFormats = {"yyyy/MM/dd HH:mm:ss.SSS","yyyy/MM/dd HH:mm:ss","yyyy/MM/dd HH:mm"};
 
     public static final Timestamp timestampDate = Timestamp.valueOf("1990-01-01 00:00:00");
 
