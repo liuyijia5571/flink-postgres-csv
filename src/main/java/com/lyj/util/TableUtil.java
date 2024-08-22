@@ -290,6 +290,7 @@ public class TableUtil {
     public static boolean executeSql(String sql) throws SQLException {
         Connection conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
         Statement stmt = conn.createStatement();
+        logger.debug("execute is {}",sql);
         boolean result = stmt.execute(sql);
         stmt.close();
         conn.close();

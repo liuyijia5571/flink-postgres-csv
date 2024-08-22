@@ -55,6 +55,11 @@ public class findNinCodeByMFile {
             }
             ninCodeList.add(shiXiaCode + "\t" + ninCode);
         }
+
+        // 关闭资源
+        workbook.close();
+        inputStream.close();
+
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
         DataSource<String> ninCodeDs = env.fromCollection(ninCodeList);
@@ -74,14 +79,11 @@ public class findNinCodeByMFile {
                     leftJoinDs = ninCodeDs.filter(u -> u.contains("21" + "\t"));
                 } else if (fileName.contains("F.csv")) {
                     leftJoinDs = ninCodeDs.filter(u -> u.contains("34" + "\t"));
-                } else if (fileName.contains("K.csv")
-                ) {
+                } else if (fileName.contains("K.csv")) {
                     leftJoinDs = ninCodeDs.filter(u -> u.contains("35" + "\t"));
-                } else if (fileName.contains("N.csv")
-                ) {
+                } else if (fileName.contains("N.csv")) {
                     leftJoinDs = ninCodeDs.filter(u -> u.contains("23" + "\t"));
-                } else if (fileName.contains("Z.csv")
-                ) {
+                } else if (fileName.contains("Z.csv")) {
                     leftJoinDs = ninCodeDs.filter(u -> u.contains("22" + "\t"));
                 }
                 if (leftJoinDs != null) {

@@ -91,7 +91,7 @@ public class TsvToPostgreSQL {
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
-                                            if (colName.equalsIgnoreCase("insert_job_id") ||
+                                         if (colName.equalsIgnoreCase("insert_job_id") ||
                                                     colName.equalsIgnoreCase("insert_pro_id") ||
                                                     colName.equalsIgnoreCase("upd_user_id") ||
                                                     colName.equalsIgnoreCase("upd_job_id") ||

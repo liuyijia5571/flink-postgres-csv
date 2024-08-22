@@ -4,11 +4,13 @@ import com.lyj.util.ConfigLoader;
 import org.apache.flink.api.java.utils.ParameterTool;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
+import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.executeSql;
 
 public class DDLCommand {
@@ -19,7 +21,7 @@ public class DDLCommand {
         final ParameterTool params = ParameterTool.fromArgs(args);
         // 通过命令行参来选择配置文件
 
-        String activeProfile = params.get(DB_PROFILE,"data_prod");
+        String activeProfile = params.get(DB_PROFILE,"dev82");
 
         String exeFolderPath = params.get("DDL_PATH","C:\\青果\\黄信中要的数据\\data_0612\\DDL");
 
@@ -33,15 +35,15 @@ public class DDLCommand {
                 for (File file : files) {
                     if (!file.isDirectory()) {
                         String sqlFilePath = folderPath + "\\" + file.getName();
-                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath));
-
+                        System.out.println("执行的文件名：" + file.getName());
+                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName(CHARSET_NAME_31J));
                         // 拼接 SQL 文件中的所有语句
                         StringBuilder sqlBuilder = new StringBuilder();
                         for (String line : sqlLines) {
                             sqlBuilder.append(line).append("\n");
                         }
                         String sql = sqlBuilder.toString();
-                        System.out.println("执行的文件名：" + file.getName());
+
                         executeSql(sql);
 
                     }
