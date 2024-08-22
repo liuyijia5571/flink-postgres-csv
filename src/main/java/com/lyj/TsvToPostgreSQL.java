@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
+import static com.lyj.util.TableUtil.NOW_DATE;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.getConnectionOptions;
 import static com.lyj.util.TableUtil.getInsertSql;
@@ -91,8 +92,7 @@ public class TsvToPostgreSQL {
                                         for (int i = 0; i < colNames.size(); i++) {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
-                                         if (colName.equalsIgnoreCase("insert_job_id") ||
-                                                    colName.equalsIgnoreCase("insert_pro_id") ||
+                                            if (colName.equalsIgnoreCase("insert_pro_id") ||
                                                     colName.equalsIgnoreCase("upd_user_id") ||
                                                     colName.equalsIgnoreCase("upd_job_id") ||
                                                     colName.equalsIgnoreCase("upd_pro_id")
@@ -116,8 +116,10 @@ public class TsvToPostgreSQL {
                                                 if (datas.length > i) {
                                                     setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
                                                 } else {
-                                                    setPsData(i + 1, colName, colClass, "1990-01-01 00:00:00", ps, fileName);
+                                                    setPsData(i + 1, colName, colClass, NOW_DATE, ps, fileName);
                                                 }
+                                            } else if (colName.equalsIgnoreCase("insert_job_id")) {
+                                                setPsData(i + 1, colName, colClass, TsvToPostgreSQL.class.getSimpleName(), ps, fileName);
                                             } else {
                                                 if (i < datas.length) {
                                                     setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
