@@ -25,6 +25,18 @@ import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.insertDB;
 import static com.lyj.util.TableUtil.setFieldValue;
 
+/**
+ * U12导入数据库
+ * 参数
+ * --db_profile
+ * dev43
+ * --input_file_path
+ * C:\青果\客様返送データ確認\過去データ移行専用\対応表資料\\u12_prod_db_荷主コード対応表
+ * --schema
+ * xuexiaodingtest2
+ * --truncate
+ * true
+ */
 public class U12ProdDbPostGreSql {
 
     private static final Logger logger = LoggerFactory.getLogger(U12ProdDbPostGreSql.class);

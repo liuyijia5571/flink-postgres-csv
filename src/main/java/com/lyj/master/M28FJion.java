@@ -40,7 +40,10 @@ public class M28FJion {
                         int agIndex = columnToIndex("AG");
                         int ahIndex = columnToIndex("AH");
                         if (split.length >= ahIndex) {
-                            split[agIndex] = "        ";
+                            String ahStr = split[ahIndex];
+                            String agStr = split[agIndex];
+                            split[ahIndex] = insertAfterFirstHiragana(ahStr,agStr);
+                            split[agIndex] = "";
                             return Arrays.stream(split).reduce((a, b) -> a + "," + b).get();
                         }
                         return u;
@@ -52,5 +55,55 @@ public class M28FJion {
             }
             env.execute(M28FJion.class.getName());
         }
+
+
+    }
+
+    // 方法：判断字符是否为平假名、片假名（全角或半角）或字母
+    public static boolean isHiraganaKatakanaOrLetter(char c) {
+        return (c >= '\u3040' && c <= '\u309F')  // 平假名范围
+                || (c >= '\u30A0' && c <= '\u30FF')  // 全角片假名范围
+                || (c >= '\uFF65' && c <= '\uFF9F')  // 半角片假名范围
+                || (c >= 'A' && c <= 'Z')            // 大写字母范围
+                || (c >= 'a' && c <= 'z')
+                ||c == '(';           // 小写字母范围
+    }
+
+
+    // 找到第一个平假名后插入字符串并替换等量空格
+    public static String insertAfterFirstHiragana(String input, String toInsert) {
+        int firstHiraganaIndex = -1;
+
+        // 遍历字符串寻找第一个平假名
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (isHiraganaKatakanaOrLetter(c)) {
+                firstHiraganaIndex = i;
+                break;
+            }
+        }
+
+        // 如果找到平假名
+        if (firstHiraganaIndex != -1) {
+            // 从平假名后开始寻找空格的位置
+            int spaceStartIndex = firstHiraganaIndex + 1;
+            int spaceEndIndex = spaceStartIndex;
+
+            // 找到连续空格的范围
+            while (spaceEndIndex < input.length() && input.charAt(spaceEndIndex) == ' ') {
+                spaceEndIndex++;
+            }
+
+            // 构建新的字符串
+            StringBuilder result = new StringBuilder();
+            result.append(input.substring(0, spaceStartIndex));  // 插入平假名前的部分
+            result.append(toInsert);                            // 插入新字符串
+            result.append(input.substring(spaceEndIndex));       // 插入平假名后的非空格部分
+
+            return result.toString();
+        }
+
+        // 如果没有找到平假名，返回原字符串
+        return input;
     }
 }

@@ -15,6 +15,11 @@ import java.util.Set;
 
 import static com.lyj.util.TableUtil.deleteFolder;
 
+/**
+ * 两个文件的差集
+ * 参数
+ * flieName
+ */
 public class CsvJoinApp {
     public static void main(String[] args) throws Exception {
 
@@ -27,8 +32,10 @@ public class CsvJoinApp {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
         String flieName = args[0];
+
         // 读取 CSV 文件并创建 DataStream
         String addFilePath = "input/add/" + flieName;
+
         DataStream<Tuple2<String, String>> addCsvDataStream = env.readTextFile(addFilePath).map(new MapFunction<String, Tuple2<String, String>>() {
             @Override
             public Tuple2<String, String> map(String u) throws Exception {
@@ -44,6 +51,7 @@ public class CsvJoinApp {
 
         // 读取 CSV 文件并创建 DataStream
         String csvFilePath = "input/add/file.txt";
+
         DataStream<Tuple2<String, String>> csvDataStream = env.readTextFile(csvFilePath).map(new MapFunction<String, Tuple2<String, String>>() {
             @Override
             public Tuple2<String, String> map(String u) throws Exception {

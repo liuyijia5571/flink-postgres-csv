@@ -21,7 +21,9 @@ import java.util.stream.Collectors;
 
 import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 
-
+/**
+ * 把R052F 中须板的数据分出来
+ */
 public class R052FunToSuz {
 
 

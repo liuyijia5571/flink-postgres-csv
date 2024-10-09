@@ -38,6 +38,15 @@ import static org.apache.flink.api.common.typeinfo.Types.TUPLE;
 
 /**
  * 品名转换
+ * 参数：
+ * --db_profile
+ * dev43
+ * --schema
+ * xuexiaodingtest
+ * --code_convert_file
+ * C:\青果\黄信中要的数据\code_convert.txt
+ * --right_result_file
+ * C:\青果\黄信中要的数据\right.txt
  */
 public class ConvertMashin00Code {
 

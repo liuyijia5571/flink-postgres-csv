@@ -12,6 +12,9 @@ import java.io.File;
 
 import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 
+/**
+ *
+ */
 public class MasDai00Join {
 
     private static final Logger logger = LoggerFactory.getLogger(MasDai00Join.class);

@@ -36,7 +36,7 @@ import static com.lyj.util.TableUtil.jdbcExecutionOptions;
  * data导入postgresql
  * 品名导入数据库
  * 品名マスタ_宮川→ジェミニ→RC作業後_20240622追加.xlsx
- * shellName = レンゴーに紐づく品番 join shellName = レンゴーに紐づかない品番
+ * shellName = レンゴーに紐づく品番 union shellName = レンゴーに紐づかない品番
  * 操作之前需要把レンゴーに紐づかない品番 B列copy到文本，再copy 回去，因为有没办法解析的表达式
  */
 public class Mashin00ToPostgreSQL {

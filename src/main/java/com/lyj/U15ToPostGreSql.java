@@ -35,6 +35,18 @@ import static com.lyj.util.TableUtil.getMaxSeq;
 import static com.lyj.util.TableUtil.insertDB;
 import static com.lyj.util.TableUtil.setFieldValue;
 
+/**
+ * u15 导入数据
+ * 参数
+ * --db_profile
+ * dev43
+ * --input_file
+ * C:\flink\input\品名マスタ_宮川→ジェミニ→RC作業後_20240622追加.xlsx
+ * --schema
+ * xuexiaodingtest
+ * --truncate
+ * true
+ */
 public class U15ToPostGreSql {
 
     private static final Logger logger = LoggerFactory.getLogger(U15ToPostGreSql.class);
@@ -262,7 +274,11 @@ public class U15ToPostGreSql {
                         dataRow.setField(j, data);
                     } else if (colName.contains("長印M05")) {
                         //J-N列是长印的CODE
-                        String data = getCellValue(row.getCell(longCodeIndex)).toString();
+                        String data = String.valueOf(getCellValue(row.getCell(longCodeIndex)));
+                        if(!StringUtils.isNotBlank(data)){
+                            // 取A列的值
+                            data = String.valueOf(getCellValue(row.getCell(0)));
+                        }
                         dataRow.setField(j, data);
                         longCodeIndex++;
                     }
@@ -321,7 +337,10 @@ public class U15ToPostGreSql {
                         dataRow.setField(j, data);
                     } else if (colName.contains("長印M05")) {
                         //G-K列是长印的CODE 6到10
-                        String data = getCellValue(row.getCell(longCodeIndex)).toString();
+                        String data = String.valueOf(getCellValue(row.getCell(longCodeIndex)));
+                        if(!StringUtils.isNotBlank(data)){
+                            data = String.valueOf(getCellValue(row.getCell(3)));
+                        }
                         dataRow.setField(j, data);
                         longCodeIndex++;
                     }

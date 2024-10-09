@@ -26,6 +26,16 @@ import static com.lyj.util.ConfigLoader.getDatabaseUsername;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.getRowTypeInfo;
 
+/**
+ * 历史数据导出
+ * 参数
+ * --db_profile
+ * dev82
+ * --txt_path
+ * C:\flink\job\output
+ * --schema
+ * xuexiaodingtest
+ */
 public class PostgresTxt1App {
 
     private static final Logger logger = LoggerFactory.getLogger(PostgresTxt1App.class);

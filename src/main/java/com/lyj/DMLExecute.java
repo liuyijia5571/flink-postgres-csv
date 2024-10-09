@@ -5,7 +5,9 @@ import com.lyj.util.ConfigLoader;
 
 import static com.lyj.util.TableUtil.executeSelectSql;
 
-
+/**
+ * 执行DML 语句在指定的数据库中
+ */
 public class DMLExecute {
     public static void main(String[] args) throws Exception {
 

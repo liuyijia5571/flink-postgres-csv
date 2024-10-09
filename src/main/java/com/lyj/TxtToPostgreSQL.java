@@ -19,7 +19,16 @@ import static com.lyj.util.TableUtil.getInsertSql;
 import static com.lyj.util.TableUtil.jdbcExecutionOptions;
 import static com.lyj.util.TableUtil.setPsData;
 
-
+/**
+ * txt导入数据库
+ * 参数
+ * --db_profile
+ * dev82
+ * --txt_path
+ * input/data/
+ * --is_truncate
+ * true
+ */
 public class TxtToPostgreSQL {
 
     private static final Logger logger = LoggerFactory.getLogger(TxtToPostgreSQL.class);

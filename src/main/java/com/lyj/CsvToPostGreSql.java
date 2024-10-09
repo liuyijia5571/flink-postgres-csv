@@ -1,6 +1,7 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -13,12 +14,16 @@ import java.util.List;
 import java.util.Map;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
+import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.COL_CLASS;
 import static com.lyj.util.TableUtil.COL_NAMES;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.insertDB;
 import static com.lyj.util.TableUtil.setFieldValue;
 
+/**
+ * csv 到postgresql 数据库
+ */
 public class CsvToPostGreSql {
 
     private static final Logger logger = LoggerFactory.getLogger(SourceToFileNamePostgresql.class);
@@ -46,7 +51,7 @@ public class CsvToPostGreSql {
 
         ConfigLoader.loadConfiguration(dbProfile);
 
-        DataSet<String> dataSource = env.readTextFile(dataFile);
+        DataSet<String> dataSource = env.readTextFile(dataFile,CHARSET_NAME_31J);
 
         Map<String, List<String>> columns = getColumns(schema, tableName, isTruncate, false);
         List<String> colNames = columns.get(COL_NAMES);
@@ -64,7 +69,7 @@ public class CsvToPostGreSql {
                             colValue = colValue.substring(1, colValue.length()-1);
                         }
                     }
-                    setFieldValue(row, i, classStr, colValue, "0", tableName);
+                    setFieldValue(row, i, classStr, StringUtils.strip(colValue), "0", tableName);
                 } else {
                     logger.error("line is {}", u);
                     break;
@@ -73,6 +78,7 @@ public class CsvToPostGreSql {
             return row;
         });
 
+        insertData.print();
         insertDB(schema, colNames, tableName, columns, insertData);
 
         env.execute(CsvToPostGreSql.class.getName());

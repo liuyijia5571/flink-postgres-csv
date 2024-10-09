@@ -10,6 +10,7 @@ import org.apache.flink.api.java.operators.MapOperator;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple5;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.shaded.netty4.io.netty.util.internal.StringUtil;
 import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -251,6 +252,9 @@ public class SourceToFileNamePostgresql {
             for (Tuple5 tuple5 : tableInfo) {
                 String fileName = (String) tuple5.f2;
                 String filePath = inputFilePath + File.separator + tuple5.f3 + File.separator + fileName;
+                if (StringUtil.isNullOrEmpty((String) tuple5.f3)) {
+                    filePath = inputFilePath + File.separator + fileName;
+                }
                 logger.info("read file path is {}", filePath);
                 File readFilePath = new File(filePath);
                 if (readFilePath.exists()) {

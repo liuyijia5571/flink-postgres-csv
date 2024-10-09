@@ -9,7 +9,9 @@ import java.io.File;
 
 import static com.lyj.util.TableUtil.deleteFolder;
 
-
+/**
+ * 分割字符串
+ */
 public class SplitWord {
 
     private static final Logger logger = LoggerFactory.getLogger(SplitWord.class);

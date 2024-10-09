@@ -13,6 +13,16 @@ import static com.lyj.PostgresTxt1App.checkParams;
 import static com.lyj.PostgresTxt1App.extracted;
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
 
+/**
+ * 历史数据导出
+ * 参数：
+ * --db_profile
+ * dev82
+ * --txt_path
+ * C:\flink\job\output
+ * --schema
+ * xuexiaodingtest
+ */
 public class PostgresTxt2App {
 
     private static final Logger logger = LoggerFactory.getLogger(PostgresTxt2App.class);

@@ -23,6 +23,9 @@ import static com.lyj.util.ConfigLoader.getDatabaseUsername;
 import static com.lyj.util.TableUtil.deleteFolder;
 import static com.lyj.util.TableUtil.getColumns;
 
+/**
+ * 从postgresql 导出txt文件
+ */
 public class FlinkPostgresALLTxtApp {
 
     private static boolean executeFlag = false;

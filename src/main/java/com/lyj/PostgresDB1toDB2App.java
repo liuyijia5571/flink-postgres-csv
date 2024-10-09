@@ -28,6 +28,9 @@ import static com.lyj.util.TableUtil.getRowTypeInfo;
 import static com.lyj.util.TableUtil.jdbcExecutionOptions;
 import static com.lyj.util.TableUtil.setPsData;
 
+/**
+ * postgresql db1表到db2表
+ */
 public class PostgresDB1toDB2App {
 
     private static final Logger logger = LoggerFactory.getLogger(PostgresDB1toDB2App.class);

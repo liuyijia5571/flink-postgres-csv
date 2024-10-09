@@ -13,6 +13,9 @@ import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.executeSql;
 
+/**
+ * 执行DDL 语句在指定的数据库中
+ */
 public class DDLCommand {
 
     public static void main(String[] args) throws Exception {
@@ -23,7 +26,7 @@ public class DDLCommand {
 
         String activeProfile = params.get(DB_PROFILE,"dev82");
 
-        String exeFolderPath = params.get("DDL_PATH","C:\\青果\\黄信中要的数据\\data_0612\\DDL");
+        String exeFolderPath = params.get("DDL_PATH","C:\\联合最新共通数据\\20240521");
 
         ConfigLoader.loadConfiguration(activeProfile);
 

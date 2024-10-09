@@ -35,6 +35,20 @@ import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.getRowTypeInfo;
 import static com.lyj.util.TableUtil.getTypeInformationArr;
 
+/**
+ * 比较数据文件
+ * 参数：
+ * --db_profile
+ * dev43
+ * --old_table
+ * u12_prod_db
+ * --new_table
+ * u12_prod_db
+ * --old_schema
+ * xuexiaodingtest
+ * --new_schema
+ * xuexiaodingtest2
+ */
 public class CompareDB {
 
     private static final Logger logger = LoggerFactory.getLogger(CompareDB.class);

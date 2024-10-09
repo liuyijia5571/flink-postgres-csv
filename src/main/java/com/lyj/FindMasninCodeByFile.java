@@ -18,6 +18,13 @@ import java.io.File;
 import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.getFormattedDate;
 
+/**
+ * 参数
+ * --input_path
+ * C:\flink\input\20240622提供分\マスタファイル
+ * --masnin_code_file
+ * C:\flink\input\masnin_code.txt
+ */
 public class FindMasninCodeByFile {
 
     private static final Logger logger = LoggerFactory.getLogger(FindMasninCodeByFile.class);

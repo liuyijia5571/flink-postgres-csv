@@ -2,6 +2,7 @@ package com.lyj;
 
 import com.lyj.util.ConfigLoader;
 import com.lyj.util.ExcelReaderTask;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -30,6 +31,16 @@ import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.insertDB;
 import static com.lyj.util.TableUtil.setFieldValue;
 
+/**
+ * u16 导入数据库
+ * 参数
+ * --db_profile
+ * dev43
+ * --schema
+ * xuexiaodingtest3
+ * --input_file_path
+ * "C:\Users\劉義佳\Downloads\123"
+ */
 public class U16ToFileNamePostGreSql {
 
     private static final Logger logger = LoggerFactory.getLogger(U16ToFileNamePostGreSql.class);
@@ -102,10 +113,10 @@ public class U16ToFileNamePostGreSql {
 
                 DataSet<Row> temp = dataDs.leftOuterJoin(maShinDs).where(row -> {
                     String field = (String) row.getField(3);
-                    return field.trim();
+                    return StringUtils.strip(field);
                 }).equalTo(row -> {
                     String field = (String) row.getField(0);
-                    return field.trim();
+                    return StringUtils.strip(field);
                 }).with((row1, row2) -> {
                     if (row2 != null) {
                         row1.setField(4, row2.getField(1));

@@ -20,7 +20,16 @@ import static com.lyj.util.TableUtil.getInsertSql;
 import static com.lyj.util.TableUtil.jdbcExecutionOptions;
 import static com.lyj.util.TableUtil.setPsData;
 
-
+/**
+ * tsv 导入数据库
+ * 参数
+ * --db_profile
+ * dev82
+ * --txt_path
+ * input/tsv/
+ * --is_truncate
+ * true
+ */
 public class TsvToPostgreSQL {
 
     private static final Logger logger = LoggerFactory.getLogger(TsvToPostgreSQL.class);
