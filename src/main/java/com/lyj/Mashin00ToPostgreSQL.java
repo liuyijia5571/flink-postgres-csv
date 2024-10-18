@@ -38,6 +38,7 @@ import static com.lyj.util.TableUtil.jdbcExecutionOptions;
  * 品名マスタ_宮川→ジェミニ→RC作業後_20240622追加.xlsx
  * shellName = レンゴーに紐づく品番 union shellName = レンゴーに紐づかない品番
  * 操作之前需要把レンゴーに紐づかない品番 B列copy到文本，再copy 回去，因为有没办法解析的表达式
+ * 需要事前处理一下科学计数法，转成数字以后再转成文本
  */
 public class Mashin00ToPostgreSQL {
 
@@ -181,6 +182,9 @@ public class Mashin00ToPostgreSQL {
                 if (data.isEmpty()) {
                     break;
                 }
+                    if ("40217".equals(getCellValue(row.getCell(16)).toString())){
+                    logger.debug(data);
+                }
                 StringBuilder line = new StringBuilder();
                 for (int j = 14; j <= 46; j++) {
                     line.append(getCellValue(row.getCell(j)));
@@ -189,6 +193,7 @@ public class Mashin00ToPostgreSQL {
                     }
                 }
                 data1RowList.add(line.toString());
+//                logger.debug(line.toString());
             } else {
                 printTableHead(row, i, inputFile);
             }

@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
-import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.COL_CLASS;
 import static com.lyj.util.TableUtil.COL_NAMES;
+import static com.lyj.util.TableUtil.NOW_DATE;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.insertDB;
 import static com.lyj.util.TableUtil.setFieldValue;
@@ -51,7 +51,8 @@ public class CsvToPostGreSql {
 
         ConfigLoader.loadConfiguration(dbProfile);
 
-        DataSet<String> dataSource = env.readTextFile(dataFile,CHARSET_NAME_31J);
+        DataSet<String> dataSource = env.readTextFile(dataFile);
+//        DataSet<String> dataSource = env.readTextFile(dataFile, CHARSET_NAME_31J);
 
         Map<String, List<String>> columns = getColumns(schema, tableName, isTruncate, false);
         List<String> colNames = columns.get(COL_NAMES);
@@ -60,19 +61,46 @@ public class CsvToPostGreSql {
         DataSet<Row> insertData = dataSource.map(u -> {
             Row row = new Row(colNames.size());
             String[] split = u.split(",", -1);
-            for (int i = 0; i < split.length; i++) {
+            int offset = 0;
+            if ("\"C\"".equals(split[0]) || "\"U\"".equals(split[0])) {
+                offset = 1;
+            }
+
+            for (int i = 0; i < split.length - offset; i++) {
                 if (i < row.getArity()) {
                     String classStr = colClass.get(i);
-                    String colValue = split[i];
-                    if (classStr.contains("character")) {
+                    String colValue = split[i + offset];
+//                    if (classStr.contains("character")) {
                         if (colValue.startsWith("\"") && colValue.endsWith("\"")) {
-                            colValue = colValue.substring(1, colValue.length()-1);
+                            colValue = colValue.substring(1, colValue.length() - 1);
                         }
-                    }
-                    setFieldValue(row, i, classStr, StringUtils.strip(colValue), "0", tableName);
+//                    }
+                    setFieldValue(row, i, classStr, colValue, "0", tableName);
                 } else {
                     logger.error("line is {}", u);
                     break;
+                }
+            }
+            if (row.getArity() > split.length - offset) {
+                for (int i = split.length - offset; i < row.getArity(); i++) {
+                    String colClassName = colClass.get(i);
+                    String colName = colNames.get(i);
+                    if (colName.equalsIgnoreCase("insert_pro_id") ||
+                            colName.equalsIgnoreCase("upd_user_id") ||
+                            colName.equalsIgnoreCase("upd_job_id") ||
+                            colName.equalsIgnoreCase("upd_pro_id")
+                    ) {
+                        setFieldValue(row, i, colClassName, "", "0", tableName);
+                    } else if (colName.equalsIgnoreCase("insert_user_id") ||
+                            colName.equalsIgnoreCase("partition_flag")
+                    ) {
+                        setFieldValue(row, i, colClassName, tableName.toUpperCase(), "0", tableName);
+                    } else if (colName.equalsIgnoreCase("upd_sys_date") ||
+                            colName.equalsIgnoreCase("insert_sys_date")) {
+                        setFieldValue(row, i, colClassName, NOW_DATE,"0" , tableName);
+                    } else if (colName.equalsIgnoreCase("insert_job_id")) {
+                        setFieldValue(row, i, colClassName,  CsvToPostGreSql.class.getSimpleName(), "0" , tableName);
+                    }
                 }
             }
             return row;
@@ -107,7 +135,6 @@ public class CsvToPostGreSql {
             logger.error("data_file is not file");
             return false;
         }
-
         return true;
     }
 }

@@ -104,7 +104,7 @@ public class Mscbht00Insert {
 
         DataSet<Tuple3> distinct = maskaiDs.union(maskaiChoDs).groupBy(u -> (String) u.getField(0)) // 根据 A 字段分组
                 .reduce((value1, value2) -> {
-                    // 随机选择 B 字段的值
+                    //
                     if (maskaiCode.equals(value1.f2)) {
                         return value1;
                     } else if (maskaiCode.equals(value2.f2)) {

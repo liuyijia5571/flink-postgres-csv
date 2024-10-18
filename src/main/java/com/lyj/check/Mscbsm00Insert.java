@@ -112,7 +112,7 @@ public class Mscbsm00Insert {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < u.getArity(); i++) {
                 sb.append(u.getField(i));
-                if (1 < u.getArity() - 1) {
+                if (i < u.getArity() - 1) {
                     sb.append("\t");
                 }
             }

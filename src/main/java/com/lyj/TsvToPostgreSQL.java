@@ -128,7 +128,11 @@ public class TsvToPostgreSQL {
                                                     setPsData(i + 1, colName, colClass, NOW_DATE, ps, fileName);
                                                 }
                                             } else if (colName.equalsIgnoreCase("insert_job_id")) {
-                                                setPsData(i + 1, colName, colClass, TsvToPostgreSQL.class.getSimpleName(), ps, fileName);
+                                                if (datas.length > i) {
+                                                    setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
+                                                } else {
+                                                    setPsData(i + 1, colName, colClass, TsvToPostgreSQL.class.getSimpleName(), ps, fileName);
+                                                }
                                             } else {
                                                 if (i < datas.length) {
                                                     setPsData(i + 1, colName, colClass, datas[i], ps, tableName);

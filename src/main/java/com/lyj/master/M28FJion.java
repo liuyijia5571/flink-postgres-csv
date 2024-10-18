@@ -38,11 +38,7 @@ public class M28FJion {
                     MapOperator<String, Object> result = stringDataSource.map(u -> {
                         String[] split = u.split(",", -1);
                         int agIndex = columnToIndex("AG");
-                        int ahIndex = columnToIndex("AH");
-                        if (split.length >= ahIndex) {
-                            String ahStr = split[ahIndex];
-                            String agStr = split[agIndex];
-                            split[ahIndex] = insertAfterFirstHiragana(ahStr,agStr);
+                        if (split.length > agIndex) {
                             split[agIndex] = "";
                             return Arrays.stream(split).reduce((a, b) -> a + "," + b).get();
                         }
