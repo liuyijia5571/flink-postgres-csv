@@ -8,4 +8,7 @@
 ../src/main/resources/application-dev82_0208.properties
 ../src/main/resources/application-host.properties
 ../src/main/resources/application-test01.properties
+../src/main/java/com/lyj/test/*
+../src/main/java/com/lyj/Test*.java
+
 

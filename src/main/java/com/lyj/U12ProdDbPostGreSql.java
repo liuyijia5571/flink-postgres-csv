@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Map;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
-import static com.lyj.util.TableUtil.getFormattedDate;
 import static com.lyj.util.TableUtil.COL_CLASS;
 import static com.lyj.util.TableUtil.COL_NAMES;
 import static com.lyj.util.TableUtil.getColumns;
+import static com.lyj.util.TableUtil.getFormattedDate;
 import static com.lyj.util.TableUtil.insertDB;
 import static com.lyj.util.TableUtil.setFieldValue;
 

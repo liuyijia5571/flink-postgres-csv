@@ -1,7 +1,6 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
-import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.utils.ParameterTool;

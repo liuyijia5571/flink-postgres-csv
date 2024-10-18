@@ -1,26 +1,16 @@
 package com.lyj;
 
 
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
 import com.lyj.util.ConfigLoader;
 import com.lyj.util.ExcelUtil;
-
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
-
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-
 import org.apache.flink.api.java.operators.JoinOperator;
 import org.apache.flink.api.java.operators.MapOperator;
 import org.apache.flink.api.java.utils.ParameterTool;
-
 import org.apache.flink.core.fs.FileSystem;
-
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.StringUtils;
 import org.apache.poi.ss.usermodel.Row;
@@ -34,8 +24,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.ExcelUtil.getCellValue;

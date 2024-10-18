@@ -19,7 +19,6 @@ import org.apache.flink.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -27,11 +26,11 @@ import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.ConfigLoader.getDatabasePassword;
 import static com.lyj.util.ConfigLoader.getDatabaseUrl;
 import static com.lyj.util.ConfigLoader.getDatabaseUsername;
-import static com.lyj.util.TableUtil.COL_CLASS;
-import static com.lyj.util.TableUtil.getFormattedDate;
 import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
+import static com.lyj.util.TableUtil.COL_CLASS;
 import static com.lyj.util.TableUtil.COL_NAMES;
 import static com.lyj.util.TableUtil.getColumns;
+import static com.lyj.util.TableUtil.getFormattedDate;
 import static com.lyj.util.TableUtil.getRowTypeInfo;
 import static com.lyj.util.TableUtil.getTypeInformationArr;
 
