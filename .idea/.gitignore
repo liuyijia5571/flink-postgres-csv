@@ -3,3 +3,9 @@
 /workspace.xml
 ../.idea/*.xml
 ../src/main/resources/application-test05.properties
+../src/main/resources/application-data_prod.properties
+../src/main/resources/application-dev43.properties
+../src/main/resources/application-dev82_0208.properties
+../src/main/resources/application-host.properties
+../src/main/resources/application-test01.properties
+
