@@ -373,6 +373,9 @@ public class TableUtil {
         for (int i = 0; i < colClass.size(); i++) {
             String columnType = colClass.get(i);
             switch (columnType) {
+                case "integer":
+                    sqlTypes[i] = Types.INTEGER;
+                    break;
                 case "numeric":
                     sqlTypes[i] = Types.NUMERIC;
                     break;
@@ -446,6 +449,9 @@ public class TableUtil {
     public static void setFieldValue(Row row, int rowIndex, String colClass, String dataValue, String numericScale, String tableName) throws
             ParseException {
         switch (colClass) {
+            case "integer":
+                row.setField(rowIndex, Integer.valueOf(dataValue));
+                break;
             case "numeric":
                 dataValue = dataValue.trim();
                 try {

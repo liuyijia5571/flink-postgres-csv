@@ -263,7 +263,7 @@ public class SourceToFileNamePostgresql {
                         List<String> array = numericScaleList.stream().map(u -> "0").collect(Collectors.toList());
                         columns.put("NUMERIC_SCALE", array);
                     }
-                    FilterOperator<String> stringDataSource = env.readTextFile(filePath, CHARSET_NAME_31J).filter(line -> !"".equals(line));
+                    FilterOperator<String> stringDataSource = env.readTextFile(filePath, CHARSET_NAME_31J).filter(line -> !line.contains(""));
                     // 合并 DataSet
                     //R05的数据是   202310  以前的逻辑是 是按顺序插入，202312 之后是
                     // 取  arr(0) & "," & arr(1) & "," & arr(2) & "," & arr(3) & "," & arr(4) & "," & arr(5) & "," & arr(6) &

@@ -1,6 +1,7 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.jdbc.JdbcSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
+import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.NOW_DATE;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.getConnectionOptions;
@@ -46,10 +48,7 @@ public class TsvToPostgreSQL {
 
         boolean checkParamsResult = checkParams(activeProfile, folderPath);
         if (!checkParamsResult) {
-            logger.error("params demo : " +
-                    "--db_profile dev43  \n" +
-                    "--txt_path C:\\青果\\Data_Result\\sql\\data  \n" +
-                    "--is_truncate true  ");
+            logger.error("params demo : " + "--db_profile dev43  \n" + "--txt_path C:\\青果\\Data_Result\\sql\\data  \n" + "--is_truncate true  ");
             return;
         }
 
@@ -80,69 +79,61 @@ public class TsvToPostgreSQL {
                             String schemaName = tableNameArr[0].toLowerCase();
                             String tableName = tableNameArr[1].split("\\.")[0].toLowerCase();
 
-                            Map<String, List<String>> columns;
-                            columns = getColumns(schemaName, tableName, isTruncate);
+                            Map<String, List<String>> columns = getColumns(schemaName, tableName, isTruncate);
                             List<String> colClasses = columns.get("COL_CLASS");
                             List<String> colNames = columns.get("COL_NAMES");
-                            if (colNames.isEmpty())
-                                continue;
+                            if (colNames.isEmpty()) continue;
                             String insertSql = getInsertSql(colNames, schemaName, tableName);
 
-                            sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").
-                                    append(schemaName).append(".").append(tableName).append(" order by seq_no ;\n");
+                            sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").append(schemaName).append(".").append(tableName).append(" order by seq_no ;\n");
 
                             logger.info("insertSql is {}", insertSql);
                             // 读取 CSV 文件并创建 DataStream
-                            DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath);
+                            DataStreamSource<String> csvDataStream = env.readTextFile(csvFilePath, CHARSET_NAME_31J);
                             // 将数据写入 PostgreSQL 数据库
                             csvDataStream.addSink(JdbcSink.sink(insertSql, (ps, t) -> {
-                                        // 对每个数据元素进行写入操作
-                                        String[] datas = t.split("\t");
-                                        for (int i = 0; i < colNames.size(); i++) {
-                                            String colName = colNames.get(i);
-                                            String colClass = colClasses.get(i);
-                                            if (colName.equalsIgnoreCase("insert_pro_id") ||
-                                                    colName.equalsIgnoreCase("upd_user_id") ||
-                                                    colName.equalsIgnoreCase("upd_job_id") ||
-                                                    colName.equalsIgnoreCase("upd_pro_id")
-                                            ) {
-                                                if (datas.length > i) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
-                                                } else {
-                                                    setPsData(i + 1, colName, colClass, "", ps, fileName);
-                                                }
-
-                                            } else if (colName.equalsIgnoreCase("insert_user_id") ||
-                                                    colName.equalsIgnoreCase("partition_flag")
-                                            ) {
-                                                if (datas.length > i) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
-                                                } else {
-                                                    setPsData(i + 1, colName, colClass, tableName.toUpperCase(), ps, fileName);
-                                                }
-                                            } else if (colName.equalsIgnoreCase("upd_sys_date") ||
-                                                    colName.equalsIgnoreCase("insert_sys_date")) {
-                                                if (datas.length > i) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
-                                                } else {
-                                                    setPsData(i + 1, colName, colClass, NOW_DATE, ps, fileName);
-                                                }
-                                            } else if (colName.equalsIgnoreCase("insert_job_id")) {
-                                                if (datas.length > i) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
-                                                } else {
-                                                    setPsData(i + 1, colName, colClass, TsvToPostgreSQL.class.getSimpleName(), ps, fileName);
-                                                }
-                                            } else {
-                                                if (i < datas.length) {
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
-                                                } else {
-                                                    setPsData(i + 1, colName, colClass, "", ps, fileName);
-                                                }
-                                            }
+                                // 对每个数据元素进行写入操作
+                                String[] datas = t.split("\t");
+                                for (int i = 0; i < colNames.size(); i++) {
+                                    String colName = colNames.get(i);
+                                    String colClass = colClasses.get(i);
+                                    if (colName.equalsIgnoreCase("insert_pro_id") || colName.equalsIgnoreCase("upd_user_id") || colName.equalsIgnoreCase("upd_job_id") || colName.equalsIgnoreCase("upd_pro_id") || colName.equalsIgnoreCase("insert_user_id")) {
+                                        if (datas.length > i) {
+                                            setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
+                                        } else {
+                                            setPsData(i + 1, colName, colClass, "", ps, fileName);
                                         }
-                                    }, jdbcExecutionOptions, getConnectionOptions()
-                            ));
+
+                                    } else if (colName.equalsIgnoreCase("partition_flag")) {
+                                        if (datas.length > i) {
+                                            if (StringUtils.isNotBlank(datas[i]))
+                                                setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
+                                            else
+                                                setPsData(i + 1, colName, colClass, tableName.toUpperCase(), ps, fileName);
+                                        } else {
+                                            setPsData(i + 1, colName, colClass, tableName.toUpperCase(), ps, fileName);
+                                        }
+                                    } else if (colName.equalsIgnoreCase("upd_sys_date") || colName.equalsIgnoreCase("insert_sys_date")) {
+                                        if (datas.length > i) {
+                                            setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
+                                        } else {
+                                            setPsData(i + 1, colName, colClass, NOW_DATE, ps, fileName);
+                                        }
+                                    } else if (colName.equalsIgnoreCase("insert_job_id")) {
+                                        if (datas.length > i) {
+                                            setPsData(i + 1, colName, colClass, datas[i], ps, fileName);
+                                        } else {
+                                            setPsData(i + 1, colName, colClass, TsvToPostgreSQL.class.getSimpleName(), ps, fileName);
+                                        }
+                                    } else {
+                                        if (i < datas.length) {
+                                            setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
+                                        } else {
+                                            setPsData(i + 1, colName, colClass, "", ps, fileName);
+                                        }
+                                    }
+                                }
+                            }, jdbcExecutionOptions, getConnectionOptions()));
                         }
                     }
                 }

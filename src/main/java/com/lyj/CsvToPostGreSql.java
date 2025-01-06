@@ -34,15 +34,13 @@ public class CsvToPostGreSql {
 
         String dbProfile = parameterTool.get(DB_PROFILE);
 
-        String tableName = parameterTool.get("table_name");
-
-        String schema = parameterTool.get("schema");
+        String tableNameStr = parameterTool.get("table_name");
 
         String dataFile = parameterTool.get("data_file");
 
         boolean isTruncate = parameterTool.getBoolean("is_truncate", false);
 
-        if (!checkParams(dbProfile, schema, tableName, dataFile)) {
+        if (!checkParams(dbProfile, tableNameStr, dataFile)) {
             return;
         }
 
@@ -52,8 +50,11 @@ public class CsvToPostGreSql {
 
         DataSet<String> dataSource = env.readTextFile(dataFile);
 //        DataSet<String> dataSource = env.readTextFile(dataFile, CHARSET_NAME_31J);
+        String[] split1 = tableNameStr.split("\\.");
+        String schema = split1[0];
+        String tableName = split1[1];
 
-        Map<String, List<String>> columns = getColumns(schema, tableName, isTruncate, false);
+        Map<String, List<String>> columns = getColumns(schema, tableName, isTruncate, true);
         List<String> colNames = columns.get(COL_NAMES);
         List<String> colClass = columns.get(COL_CLASS);
 
@@ -111,17 +112,18 @@ public class CsvToPostGreSql {
         env.execute(CsvToPostGreSql.class.getName());
     }
 
-    private static boolean checkParams(String dbProfile, String schema, String tableName, String dataFile) {
+    private static boolean checkParams(String dbProfile,  String tableName, String dataFile) {
         if (dbProfile == null) {
             logger.error("db_profile is null");
             return false;
         }
-        if (schema == null) {
-            logger.error("schema is null");
-            return false;
-        }
+
         if (tableName == null) {
             logger.error("table_name is null");
+            return false;
+        }
+        if (!tableName.contains(".")) {
+            logger.error("table_name is not contains .");
             return false;
         }
         if (dataFile == null) {

@@ -65,9 +65,15 @@ public class Mscbsm00Insert {
             String[] split = u.split("\t", -1);
             row.setField(0, "BS");
             row.setField(1, siksm1);
+
+            //Ｋ＝御買上明細書
+            //Ｂ＝売買仕切書、Ｆ＝御買上データ、Ｋ＝御買上明細書、Ｕ＝売立通知書
             if ("御買上明細書".equals(split[1]) || "御買上データ".equals(split[1])) {
+                //買人
                 row.setField(2, "D2");
+                //Ｂ＝売買仕切書 Ｕ＝売立通知書 農協出荷地物データ
             } else if ("売買仕切書".equals(split[1]) || "売立通知書".equals(split[1])) {
+                //荷主
                 row.setField(2, "D1");
             } else {
                 row.setField(2, "");
@@ -152,7 +158,7 @@ public class Mscbsm00Insert {
 
         txtFile = new File(masnin00CodeMap);
         if (!txtFile.isFile()) {
-            logger.error("masnin00_code_map is not file");
+            logger.error("masnin00_code_map is not file")                                                                               ;
             return false;
         }
 

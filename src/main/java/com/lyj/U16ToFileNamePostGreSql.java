@@ -4,9 +4,12 @@ import com.lyj.util.ConfigLoader;
 import com.lyj.util.ExcelReaderTask;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.operators.DataSource;
+import org.apache.flink.api.java.operators.ReduceOperator;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.types.Row;
 import org.slf4j.Logger;
@@ -109,15 +112,28 @@ public class U16ToFileNamePostGreSql {
 
             if (!dataList.isEmpty() && !maShinList.isEmpty()) {
                 DataSource<Row> dataDs = env.fromCollection(dataList);
-                DataSet<Row> maShinDs = env.fromCollection(maShinList).distinct().setParallelism(1);
+                DataSet<Row> maShinDs = env.fromCollection(maShinList)
+                        .map(row ->
+                                {
+                                    String field = (String) row.getField(0);
+                                    row.setField(0, field);
+                                    return row;
+                                }
+                        );
 
-                DataSet<Row> temp = dataDs.leftOuterJoin(maShinDs).where(row -> {
+                ReduceOperator<Tuple2> reduce = maShinDs.map(row -> {
+                            Tuple2 tuple2 = new Tuple2();
+                            String field = (String) row.getField(0);
+                            tuple2.f0 = StringUtils.strip(field);
+                            tuple2.f1 = row.getField(1);
+                            return tuple2;
+                        }).returns(Types.TUPLE(Types.STRING, Types.STRING)).groupBy(0)
+                        .reduce((row1, row2) -> row2);
+
+                DataSet<Row> temp = dataDs.leftOuterJoin(reduce).where(row -> {
                     String field = (String) row.getField(3);
                     return StringUtils.strip(field);
-                }).equalTo(row -> {
-                    String field = (String) row.getField(0);
-                    return StringUtils.strip(field);
-                }).with((row1, row2) -> {
+                }).equalTo(0).with((row1, row2) -> {
                     if (row2 != null) {
                         row1.setField(4, row2.getField(1));
                     } else {

@@ -54,8 +54,8 @@ public class PostgresTxt1App {
         // 船桥
         siksmMap.put("FUN", "34");
         //市川支社
-        siksmMap.put("ICH", "35")
-        ;
+        siksmMap.put("ICH", "35");
+
         subTable.add("KANFIL20");
         subTable.add("TKIFILU0");
         subTable.add("TKIHANM0");
@@ -86,7 +86,7 @@ public class PostgresTxt1App {
 
         String schema = params.get("schema");
 
-        boolean checkParamsResult = checkParams(activeProfile,schema, folderPath);
+        boolean checkParamsResult = checkParams(activeProfile, schema, folderPath);
         if (!checkParamsResult) {
             logger.error("params demo : " +
                     "--db_profile dev43 \n" +
@@ -146,7 +146,7 @@ public class PostgresTxt1App {
                 for (int i = 0; i < splitTable.length; i++) {
                     String[] splitWhere = splitTable[i].split("->");
                     Map<String, List<String>> columns = getColumns(schema, tableName);
-                    String sql = getSelectSql(tableName, code, null, schema, splitWhere[0], columns);
+                    String sql = getSelectSql(tableName, code, null, schema, splitWhere, columns);
                     // 配置 JDBC 输入格式
                     if (sql != null) {
                         String fileName = splitWhere[1].replace(".", "_").toUpperCase();
@@ -155,8 +155,8 @@ public class PostgresTxt1App {
                     }
                 }
             } else {
+                Map<String, List<String>> columns = getColumns(schema, tableName);
                 if ("1".equals(code)) {
-                    Map<String, List<String>> columns = getColumns(schema, tableName);
                     String sql = getSelectSql(tableName, code, null, schema, null, columns);
                     if (sql != null) {
                         String filePath = folderPath + File.separator + "RENDAYALL_" + tableName + ".txt";
@@ -164,7 +164,6 @@ public class PostgresTxt1App {
                         saveFile(env, columns, sql, filePath);
                     }
                 } else {
-                    Map<String, List<String>> columns = getColumns(schema, tableName);
                     for (String siksmKey : siksmMap.keySet()) {
                         String sql = getSelectSql(tableName, code, siksmMap.get(siksmKey), schema, null, columns);
                         if (sql != null) {
@@ -220,7 +219,13 @@ public class PostgresTxt1App {
                 "SIKUR1 = '22' and pdyur1 = '2023'->worsuz23.sumuri00\n" +
                 "SIKUR1 = '23' and pdyur1 = '2023'->wornak23.sumuri00\n" +
                 "SIKUR1 = '34' and pdyur1 = '2023'->worfun23.sumuri00\n" +
-                "SIKUR1 = '35' and pdyur1 = '2023'->worich23.sumuri00");
+                "SIKUR1 = '35' and pdyur1 = '2023'->worich23.sumuri00\n" +
+                "SIKUR1 = '21'->renworcho.sumuri00\n" +
+                "SIKUR1 = '22'->renworsuz.sumuri00\n" +
+                "SIKUR1 = '23'->renwornak.sumuri00\n" +
+                "SIKUR1 = '34'->renworfun.sumuri00\n" +
+                "SIKUR1 = '35'->renworich.sumuri00"
+        );
         tableNames.put("TKIFILU0", "SIKHA1 = '21' and tdaha1 >= 20220101 and tdaha1 <= 20221231->worcho22.tkifilu0\n" +
                 "SIKHA1 = '22' and tdaha1 >= 20220101 and tdaha1 <= 20221231->worsuz22.tkifilu0\n" +
                 "SIKHA1 = '23' and tdaha1 >= 20220101 and tdaha1 <= 20221231->wornak22.tkifilu0\n" +
@@ -281,24 +286,34 @@ public class PostgresTxt1App {
                 "SIKSS1 = '22' and UDASS1 >= 202301 and UDASS1 <= 202312->worsuz23.kanfil20\n" +
                 "SIKSS1 = '23' and UDASS1 >= 202301 and UDASS1 <= 202312->wornak23.kanfil20\n" +
                 "SIKSS1 = '34' and UDASS1 >= 202301 and UDASS1 <= 202312->worfun23.kanfil20\n" +
-                "SIKSS1 = '35' and UDASS1 >= 202301 and UDASS1 <= 202312->worich23.kanfil20\n" );
+                "SIKSS1 = '35' and UDASS1 >= 202301 and UDASS1 <= 202312->worich23.kanfil20\n");
 
         return tableNames;
     }
 
-    private static String getSelectSql(String tableName, String code, String sikmValue, String schema, String whereStr, Map<String, List<String>> columns) {
+    private static String getSelectSql(String tableName, String code, String sikmValue, String schema, String[] whereStr, Map<String, List<String>> columns) {
         StringBuilder sbSql = new StringBuilder();
         List<String> colNames = columns.get("COL_NAMES");
         if (colNames.isEmpty()) {
             return null;
         } else {
             String collStr = colNames.stream().map(u -> "\"" + u + "\"").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
+            if ("PARTITION_FLAG".equalsIgnoreCase(colNames.get(colNames.size() - 1))) {
+                String partitionFlag = " , '" + tableName.toUpperCase() + "' AS PARTITION_FLAG";
+                collStr = colNames.stream().filter(u -> !"PARTITION_FLAG".equalsIgnoreCase(u)).map(u -> "\"" + u + "\"").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
+                if (whereStr != null) {
+                    if (whereStr[1].matches("renwor[a-zA-Z]*\\.sumuri00")) {
+                        partitionFlag = " , 'SMUR' || SUBSTRING(CAST(pdyur1 AS TEXT) FROM 3 FOR 2) || LPAD(CAST(pdmur1 AS TEXT), 2, '0') AS PARTITION_FLAG";
+                    }
+                }
+                collStr += partitionFlag;
+            }
             sbSql.append("SELECT ").append(collStr).append(" FROM ").append(schema).append(".")
                     .append(tableName);
             if (null != sikmValue)
                 sbSql.append(" where ").append(code).append(" = '").append(sikmValue).append("'");
             if (whereStr != null) {
-                sbSql.append(" where ").append(whereStr);
+                sbSql.append(" where ").append(whereStr[0]);
             }
             logger.info("execute sql is {}", sbSql);
             return sbSql.toString();

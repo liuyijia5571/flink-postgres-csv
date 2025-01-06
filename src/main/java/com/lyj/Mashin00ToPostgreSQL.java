@@ -1,6 +1,7 @@
 package com.lyj;
 
 import com.lyj.util.ConfigLoader;
+import com.lyj.util.ExcelUtil;
 import com.lyj.util.TableUtil;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.jdbc.JdbcSink;
@@ -75,7 +76,7 @@ public class Mashin00ToPostgreSQL {
         InputStream inputStream = new FileInputStream(inputFile);
         Workbook workbook = WorkbookFactory.create(inputStream);
 
-        // sheet レンゴーに紐づく品番
+//        // sheet レンゴーに紐づく品番
         List<String> data1RowList = getData1RowList(workbook, inputFile);
         logger.info("sheet name is レンゴーに紐づく品番 ，data size is {}", data1RowList.size());
 
@@ -91,6 +92,10 @@ public class Mashin00ToPostgreSQL {
         DataStreamSource<String> data1Ds = env.fromCollection(data1RowList);
         DataStreamSource<String> data2Ds = env.fromCollection(data2RowList);
         DataStream<String> allDataSet = data1Ds.union(data2Ds);
+//
+//        DataStreamSource<String> data2Ds = env.fromCollection(data2RowList);
+//        DataStream<String> allDataSet = data2Ds;
+
         // 将数据写入 PostgreSQL 数据库
         Map<String, List<String>> columns = getColumns(schemaName, tableName, true);
         List<String> colNames = columns.get("COL_NAMES");
@@ -136,21 +141,24 @@ public class Mashin00ToPostgreSQL {
         for (int i = 0; i <= data1.getLastRowNum(); i++) {
             Row row = data1.getRow(i);
             logger.debug("sheet name is レンゴーに紐づかない品番 rowId is {}", i);
+            int startIndex = ExcelUtil.columnToIndex("L");
+            int dnohn1Index = ExcelUtil.columnToIndex("M");
+            int endIndex = ExcelUtil.columnToIndex("AR");
             if (i >= 3) {
                 String data = getCellValue(row.getCell(11)).toString();
                 if ("*".equals(data)) {
                     break;
                 }
                 StringBuilder line = new StringBuilder();
-                for (int j = 11; j <= 43; j++) {
+                for (int j = startIndex; j <= endIndex; j++) {
                     String cellValue = getCellValue(row.getCell(j)).toString();
-                    if (j == 11 && cellValue.isEmpty()) {
+                    if (j == startIndex && cellValue.isEmpty()) {
                         cellValue = "HN";
-                    } else if (j == 12 && cellValue.isEmpty()) {
+                    } else if (j == dnohn1Index && cellValue.isEmpty()) {
                         cellValue = "D1";
                     }
                     line.append(cellValue);
-                    if (j < 43) {
+                    if (j < endIndex) {
                         line.append("\t");
                     }
                 }
@@ -174,21 +182,20 @@ public class Mashin00ToPostgreSQL {
             logger.error("レンゴーに紐づく品番 sheet is null ,File is {}", inputFile);
             return data1RowList;
         }
+        int startIndex = ExcelUtil.columnToIndex("O");
+        int endIndex = ExcelUtil.columnToIndex("AU");
         for (int i = 0; i <= data1.getLastRowNum(); i++) {
             Row row = data1.getRow(i);
 
             if (i >= 2) {
-                String data = getCellValue(row.getCell(14)).toString();
+                String data = getCellValue(row.getCell(startIndex)).toString();
                 if (data.isEmpty()) {
                     break;
                 }
-                    if ("40217".equals(getCellValue(row.getCell(16)).toString())){
-                    logger.debug(data);
-                }
                 StringBuilder line = new StringBuilder();
-                for (int j = 14; j <= 46; j++) {
+                for (int j = startIndex; j <= endIndex; j++) {
                     line.append(getCellValue(row.getCell(j)));
-                    if (j < 46) {
+                    if (j < endIndex) {
                         line.append("\t");
                     }
                 }

@@ -145,7 +145,7 @@ public class Mscbsm00Check {
                 }));
 //        logger.info("resultKai count is {}", resultKai.filter(u -> u.getField(0) == null).count());
 //        logger.info("resultNin count is {}", resultNin.filter(u -> u.getField(0) == null).count());
-        resultNin.union(resultKai).filter(u -> u.getField(0) == null).writeAsText("result/result.txt", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        resultNin.union(resultKai).filter(u -> u.getField(0) == null).writeAsText("result/result_1.txt", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute(Mscbsm00Check.class.getName() + "_" + getFormattedDate());
 

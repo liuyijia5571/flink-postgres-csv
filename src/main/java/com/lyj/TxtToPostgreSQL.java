@@ -98,11 +98,7 @@ public class TxtToPostgreSQL {
                                             String colName = colNames.get(i);
                                             String colClass = colClasses.get(i);
                                             if (i < datas.length) {
-                                                if ("partition_flag".equalsIgnoreCase(colName)) {
-                                                    setPsData(i + 1, colName, colClass, tableName.toUpperCase(), ps, tableName);
-                                                }else{
-                                                    setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
-                                                }
+                                                setPsData(i + 1, colName, colClass, datas[i], ps, tableName);
                                             } else {
                                                 if ("partition_flag".equalsIgnoreCase(colName)) {
                                                     setPsData(i + 1, colName, colClass, tableName.toUpperCase(), ps, tableName);
