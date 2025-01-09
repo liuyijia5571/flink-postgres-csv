@@ -57,21 +57,23 @@ public class ExcelReaderTask implements Callable<List> {
             return data;
         }
 
-        boolean lastLine = false;
         for (int i = 0; i <= daySheet.getLastRowNum(); i++) {
             org.apache.poi.ss.usermodel.Row row = daySheet.getRow(i);
             boolean maShinCode = false;
             if (i >= 3) {
+                // 判断是否是最后一行
+                if ("300".equals(getCellValue(row.getCell(ExcelUtil.columnToIndex("A")))))
+                    break;
+
+                //判断空行就跳过
+                if (getCellValue(row.getCell(ExcelUtil.columnToIndex("C"))).toString().isEmpty())
+                    continue;
                 if (row.getLastCellNum() >= colNameList.size()) {
                     Row dataRow = new Row(colNameList.size() - 1);
                     for (int j = 1; j < colNameList.size(); j++) {
                         String colName = colNameList.get(j);
                         if ("U16_発生年月日".equalsIgnoreCase(colName)) {
                             String dataValue = getCellValue(row.getCell(j + 1)).toString();
-                            if (dataValue.isEmpty()) {
-                                lastLine = true;
-                                break;
-                            }
                             LocalDateTime date = getLocalDateTime(dataValue, excelFilePath);
                             StringBuilder dateSb = new StringBuilder();
                             dateSb.append(date.getYear()).append(String.format("%02d", date.getMonth().getValue())).append(String.format("%02d", date.getDayOfMonth()));
@@ -85,25 +87,23 @@ public class ExcelReaderTask implements Callable<List> {
                             dataRow.setField(j - 1, fileName);
                             maShinCode = true;
                         } else {
+                            String dataValue;
                             if (!maShinCode) {
                                 //j ==1  rowIndex 0 ,2
                                 //j ==2  rowIndex 1 ,3
                                 //j ==3  rowIndex 2 ,4
                                 //j ==4  rowIndex 3 ,5
-                                String dataValue = getCellValue(row.getCell(j + 1)).toString();
-                                dataRow.setField(j - 1, dataValue);
+                                dataValue = getCellValue(row.getCell(j + 1)).toString();
                             } else {
                                 //j ==6 rowIndex 5 ,6
-                                String dataValue = getCellValue(row.getCell(j)).toString();
+                                dataValue = getCellValue(row.getCell(j)).toString();
                                 if ("U16_数量".equalsIgnoreCase(colName)) {
                                     dataValue = dataValue.replace(".", ",");
                                 }
-                                dataRow.setField(j - 1, dataValue);
                             }
+                            dataRow.setField(j - 1, dataValue);
                         }
                     }
-                    if (lastLine)
-                        break;
                     dataList.add(dataRow);
                 }
             } else {

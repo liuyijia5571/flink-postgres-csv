@@ -153,8 +153,7 @@ public class U16ToFileNamePostGreSql {
         if (newDataDs != null) {
             List<String> colNames = columns.get(COL_NAMES);
             insertDB(schema, colNames, U16_TABLE_NAME, columns, newDataDs);
-            String formattedDate = getFormattedDate();
-            env.execute(U16ToFileNamePostGreSql.class.getName() + "_" + formattedDate);
+            env.execute(U16ToFileNamePostGreSql.class.getSimpleName() + "_" + inputPath);
         }
     }
 

@@ -36,6 +36,7 @@ import static com.lyj.util.TableUtil.M03;
 import static com.lyj.util.TableUtil.NOW_DATE;
 import static com.lyj.util.TableUtil.NUMERIC_SCALE;
 import static com.lyj.util.TableUtil.R05_DATE_SPLIT;
+import static com.lyj.util.TableUtil.deleteData;
 import static com.lyj.util.TableUtil.deleteDataByFileName;
 import static com.lyj.util.TableUtil.getColumns;
 import static com.lyj.util.TableUtil.getGroupName;
@@ -206,7 +207,7 @@ public class SourceToFileNamePostgresql {
             logger.error("error info is {}", errList);
         }
 
-        env.execute(SourceToFileNamePostgresql.class.getName() + "_" + NOW_DATE);
+        env.execute(SourceToFileNamePostgresql.class.getSimpleName() + "_" + jobFile);
 
     }
 
@@ -420,17 +421,17 @@ public class SourceToFileNamePostgresql {
                             allFileContents = allFileContents.union(stringRowMapOperator);
                         }
                     } else if (ADD_SEQ_AND_DATE.equalsIgnoreCase((String) tuple5.f4)) {
-                        //获取DATE
-                        String f0 = (String) tuple5.f0;
-                        int indexOf = f0.length();
-                        String yearAndMon = ((String) tuple5.f2).substring(indexOf + 1, indexOf + 5);
-                        String year = yearAndMon.substring(0, 2);
-                        String mon = yearAndMon.substring(2, 4);
-                        if ("03".equals(mon)) {
-                            year = String.format("%02d", Integer.parseInt(year) - 1);
+                        //获取 DATE
+                        String date = getDate(tuple5);
+                        String colName = colNames.get(colNames.size() - 1);
+                        if (colName.equalsIgnoreCase(FILE_NAME)) {
+                            colName = colNames.get(colNames.size() - 2);
                         }
-                        String date = "20" + year;
+                        //delete old year  data by col_name : "K39_予備"
+                        deleteData(schema, tableName, "\"" + colName + "\"", date);
+
                         MapOperator<String, String> mapOperator = stringDataSource.map(u -> u + date);
+
                         DataSet<Row> stringRowMapOperator = getStringRowMapOperator(mapOperator, schema, tableName, columns, regexStr, fileName);
                         if (allFileContents == null) {
                             allFileContents = stringRowMapOperator;
@@ -459,6 +460,19 @@ public class SourceToFileNamePostgresql {
             errList.add(tuple2);
         }
         return allFileContents;
+    }
+
+    private static String getDate(Tuple5 tuple5) {
+        String f0 = (String) tuple5.f0;
+        int indexOf = f0.length();
+        String yearAndMon = ((String) tuple5.f2).substring(indexOf + 1, indexOf + 5);
+        String year = yearAndMon.substring(0, 2);
+        String mon = yearAndMon.substring(2, 4);
+        if ("01".equals(mon) || "02".equals(mon) || "03".equals(mon)) {
+            year = String.format("%02d", Integer.parseInt(year) - 1);
+        }
+        String date = "20" + year;
+        return date;
     }
 
     private static void changeAndInsertDBData(String schema, DataSet<Row> insertData, String tableName, Map<String, List<String>> columns) {

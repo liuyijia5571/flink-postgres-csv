@@ -42,7 +42,7 @@ public class TableUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(TableUtil.class);
 
-    public static final String[] possibleFormats = {"yyyy/MM/dd HH:mm:ss.SSS","yyyy/MM/dd HH:mm:ss","yyyy/MM/dd HH:mm"};
+    public static final String[] possibleFormats = {"yyyy/MM/dd HH:mm:ss.SSS", "yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm"};
 
     public static final Timestamp timestampDate = Timestamp.valueOf("1990-01-01 00:00:00");
 
@@ -290,7 +290,7 @@ public class TableUtil {
     public static boolean executeSql(String sql) throws SQLException {
         Connection conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
         Statement stmt = conn.createStatement();
-        logger.debug("execute is {}",sql);
+        logger.debug("execute is {}", sql);
         boolean result = stmt.execute(sql);
         stmt.close();
         conn.close();
@@ -528,13 +528,17 @@ public class TableUtil {
     }
 
     public static boolean deleteDataByFileName(String schema, String tableName, String fileName) {
+        return deleteData(schema, tableName, FILE_NAME, fileName);
+    }
+
+    public static boolean deleteData(String schema, String tableName, String col_name, String fileName) {
         Connection conn = null;
         PreparedStatement prepareStatement = null;
         try {
             conn = DriverManager.getConnection(getDatabaseUrl(), getDatabaseUsername(), getDatabasePassword());
             StringBuilder sb = new StringBuilder();
             sb.append("DELETE FROM ").append(schema).append(".").append(tableName);
-            sb.append(" WHERE ").append(FILE_NAME).append(" = ?");
+            sb.append(" WHERE ").append(col_name).append(" = ?");
             logger.info("delete from sql is {} fileName is {}", sb, fileName);
             prepareStatement = conn.prepareStatement(sb.toString());
             prepareStatement.setString(1, fileName);
