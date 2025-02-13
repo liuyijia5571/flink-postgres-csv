@@ -27,9 +27,9 @@ public class Mscfhs00Join {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String m63fFile = params.get("M63F_file");
+        String m63fFile = params.get("M63F_file","C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M63F.csv");
 
-        String m05fFile = params.get("M05F_file");
+        String m05fFile = params.get("M05F_file","C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M05F.csv");
         boolean checkParamsResult = checkParams(m63fFile, m05fFile);
 
         if (!checkParamsResult) {
@@ -43,7 +43,9 @@ public class Mscfhs00Join {
         env.setParallelism(1);
 
         DataSet<String> m63fDs = env.readTextFile(m63fFile,CHARSET_NAME_31J).filter(u->!"".equals(u));
+
         DataSet<String> m05fDs = env.readTextFile(m05fFile,CHARSET_NAME_31J).filter(u->!"".equals(u));
+
         DataSet<Row> result = m63fDs.leftOuterJoin(m05fDs)
                 .where(u -> u.split(",")[0]).equalTo(
                         u -> {

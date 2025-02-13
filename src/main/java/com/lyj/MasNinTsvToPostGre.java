@@ -31,14 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.lyj.util.ConfigLoader.DB_PROFILE;
 import static com.lyj.util.ExcelUtil.getCellValue;
-import static com.lyj.util.TableUtil.FILE_NAME;
-import static com.lyj.util.TableUtil.NOW_DATE;
-import static com.lyj.util.TableUtil.getColumns;
-import static com.lyj.util.TableUtil.getInsertSql;
-import static com.lyj.util.TableUtil.insertDB;
-import static com.lyj.util.TableUtil.setFieldValue;
+import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 
 /**
  * 配对市村町code
@@ -52,33 +46,23 @@ public class MasNinTsvToPostGre {
 
 
     private static final Logger logger = LoggerFactory.getLogger(MasNinTsvToPostGre.class);
-    private static int indexKcosi1;
-    private static int indexShcni1;
+    private static int indexKcosi1 = 68;
+    private static int indexShcni1 = 69;
 
     public static void main(String[] args) throws Exception {
         // 通过命令行参来选择配置文件
-
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String activeProfile = params.get(DB_PROFILE);
+        // CSV 文件
+        String folderPath = params.get("txt_path", "C:\\5月\\1.txt");
 
-        // CSV 文件路径
-        String folderPath = params.get("txt_path");
-
-        boolean checkParamsResult = checkParams(activeProfile, folderPath);
+        boolean checkParamsResult = checkParams(folderPath);
         if (!checkParamsResult) {
             logger.error("params demo : " + "--db_profile dev43  \n" + "--txt_path C:\\青果\\Data_Result\\sql\\data  \n" + "--is_truncate true  ");
             return;
         }
 
         String config = params.get("config_excel", "input/config/input.xlsx");
-
-        //是否清空表
-        boolean isTruncate = params.getBoolean("is_truncate", false);
-
-        logger.info("truncate is {}", isTruncate);
-
-        ConfigLoader.loadConfiguration(activeProfile);
 
         // 创建流执行环境
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
@@ -145,161 +129,80 @@ public class MasNinTsvToPostGre {
 
         configDs.distinct(0, 1, 2).writeAsText("output/config.txt", FileSystem.WriteMode.OVERWRITE);
         DataSet<org.apache.flink.types.Row> resultConfigDs = configDs.distinct(u -> (String) u.getField(0));
-//
-        File folder = new File(folderPath);
-        StringBuffer sb = new StringBuffer();
-        if (folder.exists()) {
 
-            File[] files = folder.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (!file.isDirectory()) {
-                        String fileName = file.getName();
-                        String csvFilePath = folderPath + File.separator + fileName;
 
-                        String[] tableNameArr = fileName.split("_");
-                        if (tableNameArr.length > 1) {
-                            String schemaName = tableNameArr[0].toLowerCase();
-                            String tableName = tableNameArr[1].split("\\.")[0].toLowerCase();
-
-                            Map<String, List<String>> columns;
-                            columns = getColumns(schemaName, tableName, isTruncate,true);
-                            List<String> colClass = columns.get("COL_CLASS");
-                            List<String> colNames = columns.get("COL_NAMES");
-                            if (colNames.isEmpty()) continue;
-                            String insertSql = getInsertSql(colNames, schemaName, tableName);
-
-                            sb.append("SELECT ").append(colNames.stream().reduce((s1, s2) -> s1 + "," + s2).orElse(null)).append(" from ").append(schemaName).append(".").append(tableName).append(" order by seq_no ;\n");
-
-                            logger.info("insertSql is {}", insertSql);
-                            // 读取 CSV 文件并创建 DataStream
-                            DataSet<String> csvDataStream = env.readTextFile(csvFilePath);
-                            int index = -1;
-                            for (int i = 0; i < colNames.size(); i++) {
-                                if ("iyuni1".equalsIgnoreCase(colNames.get(i))) {
-                                    index = i;
-                                }
-                                if ("kenni1".equalsIgnoreCase(colNames.get(i))) {
-                                    indexKcosi1 = i;
+        // 读取 CSV 文件并创建 DataStream
+        DataSet<String> csvDataStream = env.readTextFile(folderPath, CHARSET_NAME_31J);
+        //iyuni1
+        int finalIndex = 9;
+        JoinOperator<String, org.apache.flink.types.Row, String> insertDataDs =
+                csvDataStream.leftOuterJoin(resultConfigDs)
+                        .where(u -> {
+                                    String trim = u.split("\t")[finalIndex].trim();
+                                    return trim;
                                 }
 
-                                if ("shcni1".equalsIgnoreCase(colNames.get(i))) {
-                                    indexShcni1 = i;
-                                }
-                            }
-                            if (index == -1) {
-                                logger.error("iyuni1 on table not found!");
-                                return;
-                            }
-                            int finalIndex = index;
-                            JoinOperator<String, org.apache.flink.types.Row, String> insertDataDs = csvDataStream.leftOuterJoin(resultConfigDs).where(u -> u.split("\t")[finalIndex].trim()).equalTo(u -> (String) u.getField(0)).with((line, second) -> {
-                                String[] split = line.split("\t");
+                        )
+                        .equalTo(u -> (String) u.getField(0)).with((first, second) -> {
+                                String[] split = first.split("\t");
                                 split[indexKcosi1] = "0";
                                 split[indexShcni1] = "0";
                                 if (second != null) {
                                     split[indexKcosi1] = (String) second.getField(1);
                                     split[indexShcni1] = (String) second.getField(2);
                                 }
-                                return Arrays.stream(split).reduce((a, b) -> a + "\t" + b).get();
+                                return String.join("\t", split);
                             }).returns(Types.STRING);
+                            insertDataDs.writeAsText("result/masNin.txt", FileSystem.WriteMode.OVERWRITE);
 
-                            MapOperator<String, org.apache.flink.types.Row> insertData = insertDataDs.map(line -> {
 
-                                String[] split = line.split("\t", -1);
-                                org.apache.flink.types.Row row = new org.apache.flink.types.Row(colNames.size());
-                                String numericScale = "0";
-                                for (int i = 0; i < colNames.size(); i++) {
-                                    String colName = colNames.get(i);
-                                    if (i > split.length) {
-                                        //处理共同字段
-                                        if (colName.equalsIgnoreCase("insert_job_id") || colName.equalsIgnoreCase("insert_pro_id") || colName.equalsIgnoreCase("upd_user_id") || colName.equalsIgnoreCase("upd_job_id") || colName.equalsIgnoreCase("upd_pro_id")) {
-                                            setFieldValue(row, i, colClass.get(i), "", numericScale, tableName);
-                                        } else if (colName.equalsIgnoreCase("insert_user_id") || colName.equalsIgnoreCase("partition_flag")) {
-                                            setFieldValue(row, i, colClass.get(i), tableName, numericScale, tableName);
-                                        } else if (colName.equalsIgnoreCase("upd_sys_date") || colName.equalsIgnoreCase("insert_sys_date")) {
-                                            setFieldValue(row, i, colClass.get(i), NOW_DATE, numericScale, tableName);
-                                        } else if (colName.equalsIgnoreCase(FILE_NAME)) {
-                                            setFieldValue(row, i, colClass.get(i), fileName, numericScale, tableName);
-                                        } else {
-                                            setFieldValue(row, i, colClass.get(i), "", numericScale, tableName);
-                                        }
-                                    } else {
-                                        if ("hksni1".equalsIgnoreCase(colName) && "masnin00".equalsIgnoreCase(tableName)) {
-                                            if (split[i].length() > 1) {
-                                                setFieldValue(row, i, colClass.get(i), split[i].substring(0, 1), numericScale, tableName);
-                                            } else {
-                                                setFieldValue(row, i, colClass.get(i), split[i], numericScale, tableName);
-                                            }
-                                        } else if (colName.equalsIgnoreCase(FILE_NAME)) {
-                                            setFieldValue(row, i, colClass.get(i), fileName, numericScale, tableName);
-                                        } else if (i == split.length) {
-                                            setFieldValue(row, i, colClass.get(i), "", numericScale, tableName);
-                                        } else {
-                                            setFieldValue(row, i, colClass.get(i), split[i], numericScale, tableName);
-                                        }
-                                    }
-                                }
-                                return row;
-                            });
-                            insertDB(schemaName, colNames, tableName, columns, insertData);
+                            // 执行流处理
+                            logger.info("Flink MasNinTsvToPostGre job started");
 
+                            env.execute(MasNinTsvToPostGre.class.getName() + System.currentTimeMillis());
+
+                            logger.info("Flink MasNinTsvToPostGre job finished");
                         }
 
+        private static boolean checkParams (String folderPath){
+
+            if (folderPath == null) {
+                logger.error("txt_path is null!");
+                return false;
+            }
+            File resultFile = new File(folderPath);
+
+            if (!resultFile.isFile()) {
+                logger.error("txt_path is not file");
+                return false;
+            }
+            return true;
+        }
+
+
+        public static List<org.apache.flink.types.Row> getDataRowList (Workbook workbook, String sheetName, String
+        inputFile,int skipRows, String parseCols) throws Exception {
+            Sheet data = workbook.getSheet(sheetName);
+
+            List<org.apache.flink.types.Row> dataRowList = new ArrayList<>();
+            if (data == null) {
+                logger.error("{} sheet is null", sheetName);
+                return dataRowList;
+            }
+            for (int i = 0; i <= data.getLastRowNum(); i++) {
+                Row row = data.getRow(i);
+
+                if (i >= skipRows) {
+                    String[] split = parseCols.split(":");
+                    int end = ExcelUtil.columnToIndex(split[1]);
+                    int start = ExcelUtil.columnToIndex(split[0]);
+                    org.apache.flink.types.Row dataRow = new org.apache.flink.types.Row(end - start + 1);
+                    for (int j = start; j <= end; j++) {
+                        dataRow.setField(j - start, getCellValue(row.getCell(j)));
                     }
+                    dataRowList.add(dataRow);
                 }
             }
-        }
-        logger.info("select sql is {}", sb);
-
-        // 执行流处理
-        logger.info("Flink MasNinTsvToPostGre job started");
-
-        env.execute(MasNinTsvToPostGre.class.getName() + System.currentTimeMillis());
-
-        logger.info("Flink MasNinTsvToPostGre job finished");
-    }
-
-    public static List<org.apache.flink.types.Row> getDataRowList(Workbook workbook, String sheetName, String inputFile, int skipRows, String parseCols) throws Exception {
-        Sheet data = workbook.getSheet(sheetName);
-
-        List<org.apache.flink.types.Row> dataRowList = new ArrayList<>();
-        if (data == null) {
-            logger.error("{} sheet is null", sheetName);
             return dataRowList;
         }
-        for (int i = 0; i <= data.getLastRowNum(); i++) {
-            Row row = data.getRow(i);
-
-            if (i >= skipRows) {
-                String[] split = parseCols.split(":");
-                int end = ExcelUtil.columnToIndex(split[1]);
-                int start = ExcelUtil.columnToIndex(split[0]);
-                org.apache.flink.types.Row dataRow = new org.apache.flink.types.Row(end - start + 1);
-                for (int j = start; j <= end; j++) {
-                    dataRow.setField(j - start, getCellValue(row.getCell(j)));
-                }
-                dataRowList.add(dataRow);
-            }
-        }
-        return dataRowList;
     }
-
-    private static boolean checkParams(String activeProfile, String folderPath) {
-        if (activeProfile == null) {
-            logger.error("db_profile is null!");
-            return false;
-        }
-
-        if (folderPath == null) {
-            logger.error("txt_path is null!");
-            return false;
-        }
-        File resultFile = new File(folderPath);
-
-        if (!resultFile.isDirectory()) {
-            logger.error("txt_path is not directory");
-            return false;
-        }
-        return true;
-    }
-}

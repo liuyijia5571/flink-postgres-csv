@@ -128,13 +128,13 @@ public class TxtToPostgreSQL {
         }
 
         if (folderPath == null) {
-            logger.error("csv_path is null!");
+            logger.error("txt_path is null!");
             return false;
         }
         File resultFile = new File(folderPath);
 
         if (!resultFile.isDirectory()) {
-            logger.error("csv_path is not directory");
+            logger.error("txt_path is not directory");
             return false;
         }
         return true;

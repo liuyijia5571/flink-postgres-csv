@@ -30,11 +30,11 @@ public class Mscbht00ChoInsert {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String m10File = params.get("M10_FILE");
+        String m10File = params.get("M10_FILE","C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M10.csv");
 
-        String maskaiCode = params.get("maskai00_code_map");
+        String maskaiCode = params.get("maskai00_code_map","maskai00_code_map/m27_cho.txt");
 
-        String masnin00CodeMap = params.get("masnin00_code_map");
+        String masnin00CodeMap = params.get("masnin00_code_map","masnin00_code_map/masnin00_cho.txt");
 
         if (checkParams(m10File, maskaiCode, masnin00CodeMap)) return;
 

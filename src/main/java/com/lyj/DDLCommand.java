@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static com.lyj.util.ConfigLoader.DB_PROFILE;
+import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.executeSql;
 
 /**
@@ -23,9 +24,9 @@ public class DDLCommand {
         final ParameterTool params = ParameterTool.fromArgs(args);
         // 通过命令行参来选择配置文件
 
-        String activeProfile = params.get(DB_PROFILE,"dev168");
+        String activeProfile = params.get(DB_PROFILE,"dev82");
 
-        String exeFolderPath = params.get("DDL_PATH","C:\\DB 变更\\01_objdll_追い付き\\pfobjddl");
+        String exeFolderPath = params.get("DDL_PATH","C:\\青果\\lyj_20250122\\20250122");
 
         ConfigLoader.loadConfiguration(activeProfile);
 
@@ -38,8 +39,8 @@ public class DDLCommand {
                     if (!file.isDirectory()) {
                         String sqlFilePath = folderPath + "\\" + file.getName();
                         System.out.println("执行的文件名：" + file.getName());
-//                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName(CHARSET_NAME_31J));
-                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName("UTF-8"));
+                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName(CHARSET_NAME_31J));
+//                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName("UTF-8"));
                         // 拼接 SQL 文件中的所有语句
                         StringBuilder sqlBuilder = new StringBuilder();
                         for (String line : sqlLines) {

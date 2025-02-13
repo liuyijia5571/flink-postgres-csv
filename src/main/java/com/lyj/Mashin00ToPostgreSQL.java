@@ -38,7 +38,7 @@ import static com.lyj.util.TableUtil.jdbcExecutionOptions;
  * 品名导入数据库
  * 品名マスタ_宮川→ジェミニ→RC作業後_20240622追加.xlsx
  * shellName = レンゴーに紐づく品番 union shellName = レンゴーに紐づかない品番
- * 操作之前需要把レンゴーに紐づかない品番 B列copy到文本，再copy 回去，因为有没办法解析的表达式
+ * 操作之前需要把レンゴーに紐づかない品番 B列copy到文本，再copy 回去，因为有没办法解析的表达式 要保证copy 出来后面没空格
  * 需要事前处理一下科学计数法，转成数字以后再转成文本
  */
 public class Mashin00ToPostgreSQL {
@@ -52,7 +52,7 @@ public class Mashin00ToPostgreSQL {
         // 通过命令行参来选择配置文件
         String activeProfile = params.get(DB_PROFILE);
 
-        String inputFile = params.get("input_file");
+        String inputFile = params.get("input_file","C:\\Users\\劉義佳\\Downloads\\【品名マスタ突合】品名マスタ_宮川→ジェミニ→RC作業後_20240622追加ver0.4 (2).xlsx");
 
         boolean checkParamsResult = checkParams(activeProfile, inputFile);
 
@@ -182,8 +182,8 @@ public class Mashin00ToPostgreSQL {
             logger.error("レンゴーに紐づく品番 sheet is null ,File is {}", inputFile);
             return data1RowList;
         }
-        int startIndex = ExcelUtil.columnToIndex("O");
-        int endIndex = ExcelUtil.columnToIndex("AU");
+        int startIndex = ExcelUtil.columnToIndex("P");
+        int endIndex = ExcelUtil.columnToIndex("AV");
         for (int i = 0; i <= data1.getLastRowNum(); i++) {
             Row row = data1.getRow(i);
 

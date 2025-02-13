@@ -2,6 +2,7 @@ package com.lyj.check;
 
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.operators.MapOperator;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.types.Row;
@@ -13,6 +14,7 @@ import static com.lyj.util.TableUtil.getFormattedDate;
 
 /**
  * 運送者・運送会社マスタ
+ *
  */
 public class Mscbus00Insert {
 
@@ -22,11 +24,16 @@ public class Mscbus00Insert {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
+        //C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M09Z.csv
         String m09File = params.get("M09_file");
 
-        String m25File = params.get("M25_file");
+        //C:\SVN\java\kppDataMerge\data\txtData\M25F.csv
+        String m25File = params.get("M25_file","C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M25K.csv");
 
-        String sikus1 = params.get("SIKUS1");
+        //22:Z 须板
+        //34:F 船桥
+        //35:K 市川
+        String sikus1 = params.get("SIKUS1","35");
 
         boolean checkParamsResult = checkParams(m09File, m25File, sikus1);
 
@@ -87,7 +94,8 @@ public class Mscbus00Insert {
                 ds = rowDs;
             }
         }
-        ds.writeAsText("result/mscbus00.txt", FileSystem.WriteMode.OVERWRITE);
+        MapOperator<Row, String> result = ds.map(u -> u.toString().replace(",", "\t"));
+        result.writeAsText("result/mscbus00.txt", FileSystem.WriteMode.OVERWRITE);
         env.execute(Mscbus00Insert.class.getName() + "_" + getFormattedDate());
 
     }

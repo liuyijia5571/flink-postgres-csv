@@ -145,7 +145,7 @@ public class TsvToPostgreSQL {
 
             logger.info("Flink TxtToPostgreSQL job finished");
         }
-        logger.info("sql is {}", sb);
+        logger.info("selectSql is {}", sb);
 
     }
 

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
+import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.getFormattedDate;
 
 /**
@@ -24,15 +25,15 @@ public class MasninMasterConvenNokni1 {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String masnin00File = params.get("MASNIN00_FILE");
+        String masnin00File = params.get("MASNIN00_FILE", "masnin00_file/masnin00_ich.tsv");
 
-        if (masnin00File == null){
+        if (masnin00File == null) {
             logger.error("MASNIN00_FILE is null");
             return;
         }
 
         File file = new File(masnin00File);
-        if (!file.isFile()){
+        if (!file.isFile()) {
             logger.error("MASSER00_FILE is not file");
             return;
         }
@@ -41,15 +42,15 @@ public class MasninMasterConvenNokni1 {
 
         env.setParallelism(1);
 
-        MapOperator<String, String> resultDs = env.readTextFile(masnin00File).map(u -> {
+        MapOperator<String, String> resultDs = env.readTextFile(masnin00File,CHARSET_NAME_31J).map(u -> {
             String[] split = u.split("\t");
-            if ("9999999".equals(split[2])) {
-                split[2] = split[1];
+            if ("9999999".equals(split[50])) {
+                split[50] = split[5];
             }
-            return split[0] + "\t" + split[1] + "\t" + split[2];
+            return String.join("\t", split);
         });
 
-        resultDs.writeAsText("result/result_1.txt", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+        resultDs.writeAsText("result/result_masnin.txt", FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute(MasninMasterConvenNokni1.class.getName() + "_" + getFormattedDate());
 

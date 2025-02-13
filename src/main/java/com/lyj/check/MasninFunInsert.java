@@ -40,11 +40,12 @@ public class MasninFunInsert {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String masnin00File = params.get("MASNIN00_FILE");
+        //copy 字段 SEQ_NO，SCONI1，SHSNI1，
+        String masnin00File = params.get("MASNIN00_FILE","masnin00_file/masnin00_fun.tsv");
 
-        String masninCode = params.get("MASNIN_CODE");
+        String masninCode = params.get("MASNIN_CODE","masnin00_code_map/masnin00_fun.txt");
 
-        String m28File = params.get("M28_FILE");
+        String m28File = params.get("M28_FILE","C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M28F.csv");
 
         boolean checkParamsResult = checkParams(masnin00File, masninCode, m28File);
         if (!checkParamsResult) {
@@ -56,7 +57,7 @@ public class MasninFunInsert {
         env.setParallelism(1);
 
 
-        DataSource<String> masninDs = env.readTextFile(masnin00File);
+        DataSource<String> masninDs = env.readTextFile(masnin00File,CHARSET_NAME_31J);
 
         DataSet<Tuple2> masninCodeDs = env.readTextFile(masninCode).map(u -> {
             String[] split = u.split(",");
@@ -115,7 +116,9 @@ public class MasninFunInsert {
             }
             return first;
         });
-        DataSet<String> result = masninDs.leftOuterJoin(conventDs).where(u -> u.split("\t")[5]).equalTo(u -> String.valueOf(u.getField(3))).with(((first, second) -> {
+
+        DataSet<String> result = masninDs.leftOuterJoin(conventDs).where(u -> u.split("\t")[5])
+                .equalTo(u -> String.valueOf(u.getField(3))).with(((first, second) -> {
             String[] split = first.split("\t");
             if (second != null) {
                 return split[0] + "\t" + split[5] + "\t" + second.getField(2) + "\t" + second;
