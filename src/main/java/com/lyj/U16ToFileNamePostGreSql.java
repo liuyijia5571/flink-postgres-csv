@@ -30,7 +30,6 @@ import static com.lyj.util.TableUtil.COL_NAMES;
 import static com.lyj.util.TableUtil.FILE_NAME;
 import static com.lyj.util.TableUtil.deleteDataByFileName;
 import static com.lyj.util.TableUtil.getColumns;
-import static com.lyj.util.TableUtil.getFormattedDate;
 import static com.lyj.util.TableUtil.insertDB;
 import static com.lyj.util.TableUtil.setFieldValue;
 

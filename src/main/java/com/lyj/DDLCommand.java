@@ -24,9 +24,9 @@ public class DDLCommand {
         final ParameterTool params = ParameterTool.fromArgs(args);
         // 通过命令行参来选择配置文件
 
-        String activeProfile = params.get(DB_PROFILE,"dev82");
+        String activeProfile = params.get(DB_PROFILE,"dev168");
 
-        String exeFolderPath = params.get("DDL_PATH","C:\\青果\\lyj_20250122\\20250122");
+        String exeFolderPath = params.get("DDL_PATH","C:\\DML");
 
         ConfigLoader.loadConfiguration(activeProfile);
 

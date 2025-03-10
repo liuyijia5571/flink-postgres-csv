@@ -129,7 +129,7 @@ public class TableUtil {
         sb.append(tableName).append("' order by ordinal_position");
 
 
-        logger.info("execute sql is {}", sb);
+        logger.debug("execute sql is {}", sb);
         ResultSet rs = stmt.executeQuery(sb.toString());
 
         while (rs.next()) {
@@ -365,6 +365,32 @@ public class TableUtil {
         TypeInformation<?>[] types = typeInformationList.toArray(new TypeInformation[0]);
         String[] names = fieldNames.toArray(new String[0]);
         return new RowTypeInfo(types, names);
+    }
+
+    private static int[] getTypeInformation(Map<String, List<String>> columns) {
+        List<String> colClass = columns.get("COL_CLASS");
+
+        int[] sqlTypes = new int[colClass.size()];
+        for (int i = 0; i < colClass.size(); i++) {
+            String columnType = colClass.get(i);
+            switch (columnType) {
+                case "integer":
+                    sqlTypes[i] = Types.INTEGER;
+                    break;
+                case "numeric":
+                    sqlTypes[i] = Types.NUMERIC;
+                    break;
+                case "timestamp without time zone":
+                    sqlTypes[i] = Types.TIMESTAMP;
+                    break;
+                default:
+                    sqlTypes[i] = Types.VARCHAR;
+                    break;
+            }
+
+        }
+
+        return sqlTypes;
     }
 
     public static int[] getSqlTypes(Map<String, List<String>> columns) {

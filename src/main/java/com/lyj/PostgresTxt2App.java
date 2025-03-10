@@ -70,6 +70,7 @@ public class PostgresTxt2App {
         tableNames.put("SYKTKOB0", "SIKTK1");
         tableNames.put("SYKZAIB0", "SIKTB1");
         tableNames.put("SYKZATB0", "SIKTB1");
+        tableNames.put("TKITOKH0", "SIKTH1");
         return tableNames;
     }
 }

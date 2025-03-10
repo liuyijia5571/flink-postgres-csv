@@ -62,6 +62,7 @@ public class PostgresTxt1App {
         subTable.add("TKITOKM0");
         subTable.add("SUMURI00");
         subTable.add("KAISYO00");
+        subTable.add("TKIFILT0");
 
         //ながのファイム                          FAM                     71
         //长应 的数据按联合规则放到联合表里去
@@ -170,7 +171,10 @@ public class PostgresTxt1App {
                             if (tableName.equalsIgnoreCase("KANFILD0")) {
                                 String filePath = folderPath + File.separator + "RENBAK" + siksmKey + "_" + tableName + ".txt";
                                 saveFile(env, columns, sql, filePath);
-                            } else {
+                            }else if (tableName.equalsIgnoreCase("TKITOKH0")) {
+                                String filePath = folderPath + File.separator + "RENYEA" + siksmKey + "_" + tableName + ".txt";
+                                saveFile(env, columns, sql, filePath);
+                            }else {
                                 String filePath = folderPath + File.separator + "RENDAY" + siksmKey + "_" + tableName + ".txt";
                                 saveFile(env, columns, sql, filePath);
                             }
@@ -184,7 +188,7 @@ public class PostgresTxt1App {
 
     private static void saveFile(ExecutionEnvironment env, Map<String, List<String>> columns, String sql, String filePath) {
         RowTypeInfo rowTypeInfo = getRowTypeInfo(columns);
-        logger.info("data select sql is {} ", sql);
+        logger.info("data select sql is {}; ,fileName is {}", sql, filePath);
         JdbcInputFormat jdbcInputFormat = JdbcInputFormat.buildJdbcInputFormat()
                 .setDrivername("org.postgresql.Driver")
                 .setDBUrl(getDatabaseUrl())
@@ -212,7 +216,7 @@ public class PostgresTxt1App {
     private static Map<String, String> getAllTableNames() {
         Map<String, String> tableNames = new HashMap<>();
         tableNames.put("SUMURI00",
-                "SIKUR1 = '21' and pdyur1 = '2022'->worcho22.sumuri00\n" +
+                        "SIKUR1 = '21' and pdyur1 = '2022'->worcho22.sumuri00\n" +
                         "SIKUR1 = '22' and pdyur1 = '2022'->worsuz22.sumuri00\n" +
                         "SIKUR1 = '23' and pdyur1 = '2022'->wornak22.sumuri00\n" +
                         "SIKUR1 = '34' and pdyur1 = '2022'->worfun22.sumuri00\n" +
@@ -227,14 +231,14 @@ public class PostgresTxt1App {
                         "SIKUR1 = '23' and pdyur1 = '2024'->wornak24.sumuri00\n" +
                         "SIKUR1 = '34' and pdyur1 = '2024'->worfun24.sumuri00\n" +
                         "SIKUR1 = '35' and pdyur1 = '2024'->worich24.sumuri00\n" +
-                        "SIKUR1 = '21'->renworcho.sumuri00\n" +
-                        "SIKUR1 = '22'->renworsuz.sumuri00\n" +
-                        "SIKUR1 = '23'->renwornak.sumuri00\n" +
-                        "SIKUR1 = '34'->renworfun.sumuri00\n" +
-                        "SIKUR1 = '35'->renworich.sumuri00"
+                        "SIKUR1 = '21' and pdyur1 = '2025'->renworcho.sumuri00\n" +
+                        "SIKUR1 = '22' and pdyur1 = '2025'->renworsuz.sumuri00\n" +
+                        "SIKUR1 = '23' and pdyur1 = '2025'->renwornak.sumuri00\n" +
+                        "SIKUR1 = '34' and pdyur1 = '2025'->renworfun.sumuri00\n" +
+                        "SIKUR1 = '35' and pdyur1 = '2025'->renworich.sumuri00"
         );
         tableNames.put("TKIFILU0",
-                "SIKHA1 = '21' and tdaha1 >= 20220101 and tdaha1 <= 20221231->worcho22.tkifilu0\n" +
+                        "SIKHA1 = '21' and tdaha1 >= 20220101 and tdaha1 <= 20221231->worcho22.tkifilu0\n" +
                         "SIKHA1 = '22' and tdaha1 >= 20220101 and tdaha1 <= 20221231->worsuz22.tkifilu0\n" +
                         "SIKHA1 = '23' and tdaha1 >= 20220101 and tdaha1 <= 20221231->wornak22.tkifilu0\n" +
                         "SIKHA1 = '34' and tdaha1 >= 20220101 and tdaha1 <= 20221231->worfun22.tkifilu0\n" +
@@ -248,10 +252,15 @@ public class PostgresTxt1App {
                         "SIKHA1 = '22' and tdaha1 >= 20240101 and tdaha1 <= 20241231->worsuz24.tkifilu0\n" +
                         "SIKHA1 = '23' and tdaha1 >= 20240101 and tdaha1 <= 20241231->wornak24.tkifilu0\n" +
                         "SIKHA1 = '34' and tdaha1 >= 20240101 and tdaha1 <= 20241231->worfun24.tkifilu0\n" +
-                        "SIKHA1 = '35' and tdaha1 >= 20240101 and tdaha1 <= 20241231->worich24.tkifilu0"
+                        "SIKHA1 = '35' and tdaha1 >= 20240101 and tdaha1 <= 20241231->worich24.tkifilu0\n" +
+                        "SIKHA1 = '21' and tdaha1 >= 20250101 and tdaha1 <= 20251231->renworcho.tkifilu0\n" +
+                        "SIKHA1 = '22' and tdaha1 >= 20250101 and tdaha1 <= 20251231->renworsuz.tkifilu0\n" +
+                        "SIKHA1 = '23' and tdaha1 >= 20250101 and tdaha1 <= 20251231->renwornak.tkifilu0\n" +
+                        "SIKHA1 = '34' and tdaha1 >= 20250101 and tdaha1 <= 20251231->renworfun.tkifilu0\n" +
+                        "SIKHA1 = '35' and tdaha1 >= 20250101 and tdaha1 <= 20251231->renworich.tkifilu0"
         );
         tableNames.put("TKIHANM0",
-                "SIKUK1 = '21' and nenuk1 = '2022'->worcho22.tkihanm0\n" +
+                        "SIKUK1 = '21' and nenuk1 = '2022'->worcho22.tkihanm0\n" +
                         "SIKUK1 = '22' and nenuk1 = '2022'->worsuz22.tkihanm0\n" +
                         "SIKUK1 = '23' and nenuk1 = '2022'->wornak22.tkihanm0\n" +
                         "SIKUK1 = '34' and nenuk1 = '2022'->worfun22.tkihanm0\n" +
@@ -261,15 +270,19 @@ public class PostgresTxt1App {
                         "SIKUK1 = '23' and nenuk1 = '2023'->wornak23.tkihanm0\n" +
                         "SIKUK1 = '34' and nenuk1 = '2023'->worfun23.tkihanm0\n" +
                         "SIKUK1 = '35' and nenuk1 = '2023'->worich23.tkihanm0\n" +
-                        "SIKUK1 = '21' and nenuk1 = '2024'->rendaycho.tkihanm0\n" +
-                        "SIKUK1 = '22' and nenuk1 = '2024'->rendaysuz.tkihanm0\n" +
-                        "SIKUK1 = '23' and nenuk1 = '2024'->rendaynak.tkihanm0\n" +
-                        "SIKUK1 = '34' and nenuk1 = '2024'->rendayfun.tkihanm0\n" +
-                        "SIKUK1 = '35' and nenuk1 = '2024'->rendayich.tkihanm0"
+                        "SIKUK1 = '21' and nenuk1 = '2024'->worcho24.tkihanm0\n" +
+                        "SIKUK1 = '22' and nenuk1 = '2024'->worsuz24.tkihanm0\n" +
+                        "SIKUK1 = '23' and nenuk1 = '2024'->wornak24.tkihanm0\n" +
+                        "SIKUK1 = '34' and nenuk1 = '2024'->worfun24.tkihanm0\n" +
+                        "SIKUK1 = '35' and nenuk1 = '2024'->worich24.tkihanm0\n" +
+                        "SIKUK1 = '21' and nenuk1 = '2025'->renworcho.tkihanm0\n" +
+                        "SIKUK1 = '22' and nenuk1 = '2025'->renworsuz.tkihanm0\n" +
+                        "SIKUK1 = '23' and nenuk1 = '2025'->renwornak.tkihanm0\n" +
+                        "SIKUK1 = '34' and nenuk1 = '2025'->renworfun.tkihanm0\n" +
+                        "SIKUK1 = '35' and nenuk1 = '2025'->renworich.tkihanm0"
         );
-//        tableNames.put("TKITOKH0","SIKTH1");
         tableNames.put("TKITOKM0",
-                "SIKTK1 = '21' and nentk1 = '2022'->worcho22.tkitokm0\n" +
+                        "SIKTK1 = '21' and nentk1 = '2022'->worcho22.tkitokm0\n" +
                         "SIKTK1 = '22' and nentk1 = '2022'->worsuz22.tkitokm0\n" +
                         "SIKTK1 = '23' and nentk1 = '2022'->wornak22.tkitokm0\n" +
                         "SIKTK1 = '34' and nentk1 = '2022'->worfun22.tkitokm0\n" +
@@ -279,13 +292,19 @@ public class PostgresTxt1App {
                         "SIKTK1 = '23' and nentk1 = '2023'->wornak23.tkitokm0\n" +
                         "SIKTK1 = '34' and nentk1 = '2023'->worfun23.tkitokm0\n" +
                         "SIKTK1 = '35' and nentk1 = '2023'->worich23.tkitokm0\n" +
-                        "SIKTK1 = '21' and nentk1 = '2024'->rendaycho.tkitokm0\n" +
-                        "SIKTK1 = '22' and nentk1 = '2024'->rendaysuz.tkitokm0\n" +
-                        "SIKTK1 = '23' and nentk1 = '2024'->rendaynak.tkitokm0\n" +
-                        "SIKTK1 = '34' and nentk1 = '2024'->rendayfun.tkitokm0\n" +
-                        "SIKTK1 = '35' and nentk1 = '2024'->rendayich.tkitokm0");
+                        "SIKTK1 = '21' and nentk1 = '2024'->worcho24.tkitokm0\n" +
+                        "SIKTK1 = '22' and nentk1 = '2024'->worsuz24.tkitokm0\n" +
+                        "SIKTK1 = '23' and nentk1 = '2024'->wornak24.tkitokm0\n" +
+                        "SIKTK1 = '34' and nentk1 = '2024'->worfun24.tkitokm0\n" +
+                        "SIKTK1 = '35' and nentk1 = '2024'->worich24.tkitokm0\n" +
+                        "SIKTK1 = '21' and nentk1 = '2025'->renworcho.tkitokm0\n" +
+                        "SIKTK1 = '22' and nentk1 = '2025'->renworsuz.tkitokm0\n" +
+                        "SIKTK1 = '23' and nentk1 = '2025'->renwornak.tkitokm0\n" +
+                        "SIKTK1 = '34' and nentk1 = '2025'->renworfun.tkitokm0\n" +
+                        "SIKTK1 = '35' and nentk1 = '2025'->renworich.tkitokm0"
+        );
         tableNames.put("KAISYO00",
-                "SIKKR1 = '21' and TDAKR1 >= 220101 and TDAKR1 <= 221231->worcho22.kaisyo00\n" +
+                        "SIKKR1 = '21' and TDAKR1 >= 220101 and TDAKR1 <= 221231->worcho22.kaisyo00\n" +
                         "SIKKR1 = '22' and TDAKR1 >= 220101 and TDAKR1 <= 221231->worsuz22.kaisyo00\n" +
                         "SIKKR1 = '23' and TDAKR1 >= 220101 and TDAKR1 <= 221231->wornak22.kaisyo00\n" +
                         "SIKKR1 = '34' and TDAKR1 >= 220101 and TDAKR1 <= 221231->worfun22.kaisyo00\n" +
@@ -294,29 +313,62 @@ public class PostgresTxt1App {
                         "SIKKR1 = '22' and TDAKR1 >= 230101 and TDAKR1 <= 231231->worsuz23.kaisyo00\n" +
                         "SIKKR1 = '23' and TDAKR1 >= 230101 and TDAKR1 <= 231231->wornak23.kaisyo00\n" +
                         "SIKKR1 = '34' and TDAKR1 >= 230101 and TDAKR1 <= 231231->worfun23.kaisyo00\n" +
-                        "SIKKR1 = '35' and TDAKR1 >= 240101 and TDAKR1 <= 241231->worich23.kaisyo00\n" +
+                        "SIKKR1 = '35' and TDAKR1 >= 230101 and TDAKR1 <= 231231->worich23.kaisyo00\n" +
                         "SIKKR1 = '21' and TDAKR1 >= 240101 and TDAKR1 <= 241231->worcho24.kaisyo00\n" +
                         "SIKKR1 = '22' and TDAKR1 >= 240101 and TDAKR1 <= 241231->worsuz24.kaisyo00\n" +
                         "SIKKR1 = '23' and TDAKR1 >= 240101 and TDAKR1 <= 241231->wornak24.kaisyo00\n" +
                         "SIKKR1 = '34' and TDAKR1 >= 240101 and TDAKR1 <= 241231->worfun24.kaisyo00\n" +
-                        "SIKKR1 = '35' and TDAKR1 >= 240101 and TDAKR1 <= 241231->worich24.kaisyo00"
+                        "SIKKR1 = '35' and TDAKR1 >= 240101 and TDAKR1 <= 241231->worich24.kaisyo00\n" +
+                        "SIKKR1 = '21' and TDAKR1 >= 250101 and TDAKR1 <= 251231->renworcho.kaisyo00\n" +
+                        "SIKKR1 = '22' and TDAKR1 >= 250101 and TDAKR1 <= 251231->renworsuz.kaisyo00\n" +
+                        "SIKKR1 = '23' and TDAKR1 >= 250101 and TDAKR1 <= 251231->renwornak.kaisyo00\n" +
+                        "SIKKR1 = '34' and TDAKR1 >= 250101 and TDAKR1 <= 251231->renworfun.kaisyo00\n" +
+                        "SIKKR1 = '35' and TDAKR1 >= 250101 and TDAKR1 <= 251231->renworich.kaisyo00"
         );
         tableNames.put("KANFIL20",
-                "SIKSS1 = '21' and UDASS1 >= 202201 and UDASS1 <= 202212->worcho22.kanfil20\n" +
-                        "SIKSS1 = '22' and UDASS1 >= 202201 and UDASS1 <= 202212->worsuz22.kanfil20\n" +
-                        "SIKSS1 = '23' and UDASS1 >= 202201 and UDASS1 <= 202212->wornak22.kanfil20\n" +
-                        "SIKSS1 = '34' and UDASS1 >= 202201 and UDASS1 <= 202212->worfun22.kanfil20\n" +
-                        "SIKSS1 = '35' and UDASS1 >= 202201 and UDASS1 <= 202212->worich22.kanfil20\n" +
-                        "SIKSS1 = '21' and UDASS1 >= 202301 and UDASS1 <= 202312->worcho23.kanfil20\n" +
-                        "SIKSS1 = '22' and UDASS1 >= 202301 and UDASS1 <= 202312->worsuz23.kanfil20\n" +
-                        "SIKSS1 = '23' and UDASS1 >= 202301 and UDASS1 <= 202312->wornak23.kanfil20\n" +
-                        "SIKSS1 = '34' and UDASS1 >= 202301 and UDASS1 <= 202312->worfun23.kanfil20\n" +
-                        "SIKSS1 = '35' and UDASS1 >= 202301 and UDASS1 <= 202312->worich23.kanfil20\n" +
-                        "SIKSS1 = '21' and UDASS1 >= 202401 and UDASS1 <= 202412->worcho24.kanfil20\n" +
-                        "SIKSS1 = '22' and UDASS1 >= 202401 and UDASS1 <= 202412->worsuz24.kanfil20\n" +
-                        "SIKSS1 = '23' and UDASS1 >= 202401 and UDASS1 <= 202412->wornak24.kanfil20\n" +
-                        "SIKSS1 = '34' and UDASS1 >= 202401 and UDASS1 <= 202412->worfun24.kanfil20\n" +
-                        "SIKSS1 = '35' and UDASS1 >= 202401 and UDASS1 <= 202412->worich24.kanfil20"
+                        "SIKSS1 = '21' and UDASS1 >= 202112 and UDASS1 <= 202211->worcho22.kanfil20\n" +
+                        "SIKSS1 = '22' and UDASS1 >= 202112 and UDASS1 <= 202211->worsuz22.kanfil20\n" +
+                        "SIKSS1 = '23' and UDASS1 >= 202112 and UDASS1 <= 202211->wornak22.kanfil20\n" +
+                        "SIKSS1 = '34' and UDASS1 >= 202112 and UDASS1 <= 202211->worfun22.kanfil20\n" +
+                        "SIKSS1 = '35' and UDASS1 >= 202112 and UDASS1 <= 202211->worich22.kanfil20\n" +
+                        "SIKSS1 = '21' and UDASS1 >= 202212 and UDASS1 <= 202311->worcho23.kanfil20\n" +
+                        "SIKSS1 = '22' and UDASS1 >= 202212 and UDASS1 <= 202311->worsuz23.kanfil20\n" +
+                        "SIKSS1 = '23' and UDASS1 >= 202212 and UDASS1 <= 202311->wornak23.kanfil20\n" +
+                        "SIKSS1 = '34' and UDASS1 >= 202212 and UDASS1 <= 202311->worfun23.kanfil20\n" +
+                        "SIKSS1 = '35' and UDASS1 >= 202212 and UDASS1 <= 202311->worich23.kanfil20\n" +
+                        "SIKSS1 = '21' and UDASS1 >= 202312 and UDASS1 <= 202411->worcho24.kanfil20\n" +
+                        "SIKSS1 = '22' and UDASS1 >= 202312 and UDASS1 <= 202411->worsuz24.kanfil20\n" +
+                        "SIKSS1 = '23' and UDASS1 >= 202312 and UDASS1 <= 202411->wornak24.kanfil20\n" +
+                        "SIKSS1 = '34' and UDASS1 >= 202312 and UDASS1 <= 202411->worfun24.kanfil20\n" +
+                        "SIKSS1 = '35' and UDASS1 >= 202312 and UDASS1 <= 202411->worich24.kanfil20\n" +
+                        "SIKSS1 = '21' and UDASS1 >= 202412 and UDASS1 <= 202511->renworcho.kanfil20\n" +
+                        "SIKSS1 = '22' and UDASS1 >= 202412 and UDASS1 <= 202511->renworsuz.kanfil20\n" +
+                        "SIKSS1 = '23' and UDASS1 >= 202412 and UDASS1 <= 202511->renwornak.kanfil20\n" +
+                        "SIKSS1 = '34' and UDASS1 >= 202412 and UDASS1 <= 202511->renworfun.kanfil20\n" +
+                        "SIKSS1 = '35' and UDASS1 >= 202412 and UDASS1 <= 202511->renworich.kanfil20"
+        );
+
+        tableNames.put("TKIFILT0",
+                        "sikto1 = '21' and tdato1 >= 20220101 and tdato1 <= 20221231->worcho22.tkifilt0\n" +
+                        "sikto1 = '22' and tdato1 >= 20220101 and tdato1 <= 20221231->worsuz22.tkifilt0\n" +
+                        "sikto1 = '23' and tdato1 >= 20220101 and tdato1 <= 20221231->wornak22.tkifilt0\n" +
+                        "sikto1 = '34' and tdato1 >= 20220101 and tdato1 <= 20221231->worfun22.tkifilt0\n" +
+                        "sikto1 = '35' and tdato1 >= 20220101 and tdato1 <= 20221231->worich22.tkifilt0\n" +
+                        "sikto1 = '21' and tdato1 >= 20230101 and tdato1 <= 20231231->worcho23.tkifilt0\n" +
+                        "sikto1 = '22' and tdato1 >= 20230101 and tdato1 <= 20231231->worsuz23.tkifilt0\n" +
+                        "sikto1 = '23' and tdato1 >= 20230101 and tdato1 <= 20231231->wornak23.tkifilt0\n" +
+                        "sikto1 = '34' and tdato1 >= 20230101 and tdato1 <= 20231231->worfun23.tkifilt0\n" +
+                        "sikto1 = '35' and tdato1 >= 20230101 and tdato1 <= 20231231->worich23.tkifilt0\n" +
+                        "sikto1 = '21' and tdato1 >= 20240101 and tdato1 <= 20241231->worcho24.tkifilt0\n" +
+                        "sikto1 = '22' and tdato1 >= 20240101 and tdato1 <= 20241231->worsuz24.tkifilt0\n" +
+                        "sikto1 = '23' and tdato1 >= 20240101 and tdato1 <= 20241231->wornak24.tkifilt0\n" +
+                        "sikto1 = '34' and tdato1 >= 20240101 and tdato1 <= 20241231->worfun24.tkifilt0\n" +
+                        "sikto1 = '35' and tdato1 >= 20240101 and tdato1 <= 20241231->worich24.tkifilt0\n" +
+                        "sikto1 = '21' and tdato1 >= 20250101 and tdato1 <= 20251231->renworcho.tkifilt0\n" +
+                        "sikto1 = '22' and tdato1 >= 20250101 and tdato1 <= 20251231->renworsuz.tkifilt0\n" +
+                        "sikto1 = '23' and tdato1 >= 20250101 and tdato1 <= 20251231->renwornak.tkifilt0\n" +
+                        "sikto1 = '34' and tdato1 >= 20250101 and tdato1 <= 20251231->renworfun.tkifilt0\n" +
+                        "sikto1 = '35' and tdato1 >= 20250101 and tdato1 <= 20251231->renworich.tkifilt0"
         );
 
         return tableNames;
@@ -332,11 +384,19 @@ public class PostgresTxt1App {
             if ("PARTITION_FLAG".equalsIgnoreCase(colNames.get(colNames.size() - 1))) {
                 String partitionFlag = " , '" + tableName.toUpperCase() + "' AS PARTITION_FLAG";
                 collStr = colNames.stream().filter(u -> !"PARTITION_FLAG".equalsIgnoreCase(u)).map(u -> "\"" + u + "\"").reduce((s1, s2) -> s1 + "," + s2).orElse(null);
-                if (whereStr != null) {
-                    if (whereStr[1].matches("renwor[a-zA-Z]*\\.sumuri00")) {
-                        partitionFlag = " , 'SMUR' || SUBSTRING(CAST(pdyur1 AS TEXT) FROM 3 FOR 2) || LPAD(CAST(pdmur1 AS TEXT), 2, '0') AS PARTITION_FLAG";
-                    }
+                if ("sumuri00".equalsIgnoreCase(tableName)) {
+                    partitionFlag = " , 'SMUR' || SUBSTRING(CAST(pdyur1 AS TEXT) FROM 3 FOR 2) || LPAD(CAST(pdmur1 AS TEXT), 2, '0') AS PARTITION_FLAG";
+                }else if ("tkifilu0".equalsIgnoreCase(tableName)){
+                    partitionFlag = " , 'TKU0' || SUBSTRING(CAST(tdaha1 AS TEXT) FROM 3 FOR 4) AS PARTITION_FLAG";
+                }else if ("tkihanm0".equalsIgnoreCase(tableName)){
+                    partitionFlag = " , 'TKHM' ||SUBSTRING(CAST(nenuk1 AS TEXT) FROM 3 FOR 2) || LPAD(CAST(tukuk1 AS TEXT), 2, '0') AS PARTITION_FLAG";
+                }else if ("tkitokm0".equalsIgnoreCase(tableName)){
+                    partitionFlag = " , 'TKTM' ||SUBSTRING(CAST(nentk1 AS TEXT) FROM 3 FOR 2) || LPAD(CAST(tuktk1 AS TEXT), 2, '0') AS PARTITION_FLAG";
+                }else if ("tkifilt0".equalsIgnoreCase(tableName)){
+                    partitionFlag = " , 'TKT0' ||SUBSTRING(CAST(tdato1 AS TEXT) FROM 3 FOR 4) AS PARTITION_FLAG";
                 }
+
+
                 collStr += partitionFlag;
             }
             sbSql.append("SELECT ").append(collStr).append(" FROM ").append(schema).append(".")
@@ -346,7 +406,7 @@ public class PostgresTxt1App {
             if (whereStr != null) {
                 sbSql.append(" where ").append(whereStr[0]);
             }
-            logger.info("execute sql is {}", sbSql);
+            logger.debug("execute sql is {}", sbSql);
             return sbSql.toString();
         }
     }

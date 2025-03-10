@@ -73,6 +73,7 @@ public class PostgresTxt3App {
         tableNames.put("SUMKIC00", "1");
         tableNames.put("SUMURC00", "1");
         tableNames.put("SYKURIB0", "1");
+        tableNames.put("SYKHANB0", "1");
         return tableNames;
     }
 }
