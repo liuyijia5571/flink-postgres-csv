@@ -37,11 +37,11 @@ import static com.lyj.util.TableUtil.setFieldValue;
  * --truncate
  * true
  */
-public class U12ProdDbPostGreSql {
+public class U19ProdDbPostGreSql {
 
-    private static final Logger logger = LoggerFactory.getLogger(U12ProdDbPostGreSql.class);
+    private static final Logger logger = LoggerFactory.getLogger(U19ProdDbPostGreSql.class);
 
-    private static final String INSERT_TABLE_NAME = "u12_prod_db";
+    private static final String INSERT_TABLE_NAME = "u19_prod_db";
 
     public static void main(String[] args) throws Exception {
 
@@ -79,6 +79,7 @@ public class U12ProdDbPostGreSql {
         for (File file : files) {
             if (!file.isDirectory()) {
                 String fileName = file.getName();
+
                 String csvFilePath = inputFilePath + File.separator + fileName;
                 DataSource<String> stringDataSource = env.readTextFile(csvFilePath);
                 DataSet<Row> dataSet = stringDataSource.map(line -> {
@@ -93,9 +94,6 @@ public class U12ProdDbPostGreSql {
                     }
                     row.setField(2 + offset, split[0]);
                     row.setField(3 + offset, split[1]);
-                    if ("601203".equals(split[1])){
-                        logger.error("split is {}",split);
-                    }
                     return row;
                 });
                 if (allDataSet == null) {
@@ -107,6 +105,7 @@ public class U12ProdDbPostGreSql {
         }
         if (allDataSet != null) {
             DistinctOperator<Row> distinct = allDataSet.distinct(u -> u.toString());
+
             MapOperator<Row, Row> insetDataSet = distinct.map(new MapFunction<Row, Row>() {
                 private int index;
 
@@ -128,7 +127,7 @@ public class U12ProdDbPostGreSql {
             }).setParallelism(1);
 
             insertDB(schema, colNameList, INSERT_TABLE_NAME, columns, insetDataSet);
-            env.execute(U12ProdDbPostGreSql.class.getName() + "_" + getFormattedDate());
+            env.execute(U19ProdDbPostGreSql.class.getName() + "_" + getFormattedDate());
         }
     }
 

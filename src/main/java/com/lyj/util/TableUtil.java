@@ -245,6 +245,23 @@ public class TableUtil {
         }
     }
 
+    public static void setPsData(int parameterIndex, String colName, String colClass, Object dataValue, PreparedStatement ps, String tableName) throws SQLException {
+        //character,numeric,character varying,timestamp without time zone
+
+        switch (colClass) {
+            case "numeric":
+                ps.setBigDecimal(parameterIndex, (BigDecimal) dataValue);
+                break;
+            case "timestamp without time zone":
+                Date date = (Date) dataValue;
+                ps.setTimestamp(parameterIndex, new Timestamp(date.getTime()));
+                break;
+            default:
+                    ps.setString(parameterIndex, dataValue.toString());
+                break;
+        }
+    }
+
     public static LocalDateTime getLocalDateTime(String dataValue, String fileName) {
         try {
             double excelDate = Double.parseDouble(dataValue);

@@ -216,7 +216,12 @@ public class SourceToFileNamePostgresql {
             String tableName = entry.getKey();
             List<Tuple5> tableInfo = entry.getValue();
             Map<String, List<String>> columns = null;
-            if ("M03".equalsIgnoreCase((String) tableInfo.get(0).f0) || "M04".equalsIgnoreCase((String) tableInfo.get(0).f0) || "M32".equalsIgnoreCase((String) tableInfo.get(0).f0)) {
+            if ("M03".equalsIgnoreCase((String) tableInfo.get(0).f0)
+                    || "M04".equalsIgnoreCase((String) tableInfo.get(0).f0)
+                    || "M32".equalsIgnoreCase((String) tableInfo.get(0).f0)
+                    || "I34".equalsIgnoreCase((String) tableInfo.get(0).f0)
+                    || "I28".equalsIgnoreCase((String) tableInfo.get(0).f0)
+            ) {
                 //有些文件没有日期，就是取最近的一份
                 if (!isTruncate) {
                     //清空表数据
@@ -249,6 +254,8 @@ public class SourceToFileNamePostgresql {
             Map<String, List<String>> newColumns = getColumns(schema, newTable, false, true);
             newColName = newColumns.get(COL_NAMES);
         }
+        //
+
         if (!colClass.isEmpty()) {
             for (Tuple5 tuple5 : tableInfo) {
                 String fileName = (String) tuple5.f2;
@@ -264,6 +271,7 @@ public class SourceToFileNamePostgresql {
                         List<String> array = numericScaleList.stream().map(u -> "0").collect(Collectors.toList());
                         columns.put("NUMERIC_SCALE", array);
                     }
+
                     FilterOperator<String> stringDataSource = env.readTextFile(filePath, CHARSET_NAME_31J).filter(line -> !line.contains(""));
                     // 合并 DataSet
                     //R05的数据是   202310  以前的逻辑是 是按顺序插入，202312 之后是
@@ -363,6 +371,42 @@ public class SourceToFileNamePostgresql {
                                 return -1;
                             }
                         });
+                        DataSet<Row> stringRowMapOperator = getStringRowMapOperator(mapOperator, schema, tableName, columns, regexStr, fileName);
+                        if (allFileContents == null) {
+                            allFileContents = stringRowMapOperator;
+                        } else {
+                            allFileContents = allFileContents.union(stringRowMapOperator);
+                        }
+                    } else if ("I34".equalsIgnoreCase((String) tuple5.f0)) {
+                        MapOperator<String, String> mapOperator = stringDataSource.map(new MapFunction<String, String>() {
+                            //Ｉ３４－出荷者ＣＤ
+                            private String oldScokf1 = null;
+
+                            //Ｉ３４－品目ＣＤ－１
+                            private String hcohn = null;
+
+                            //Ｉ３４－枝ＮＯ
+                            private String edaNo = null;
+
+                            @Override
+                            public String map(String value) throws Exception {
+                                String[] split = value.split(regexStr, -1);
+                                if (oldScokf1 == null) {
+                                    edaNo = split[4];
+                                    oldScokf1 = split[5];
+                                    hcohn = split[7];
+                                } else {
+                                    if (oldScokf1.equals(split[5]) && "01".equals(split[4])
+                                            && "00000".equals(split[7]) &&"00".equals(edaNo)) {
+                                        split[7] = hcohn;
+                                    }
+                                    edaNo = split[4];
+                                    oldScokf1 = split[5];
+                                    hcohn = split[7];
+                                }
+                                return String.join(regexStr, split);
+                            }
+                        }).setParallelism(1);
                         DataSet<Row> stringRowMapOperator = getStringRowMapOperator(mapOperator, schema, tableName, columns, regexStr, fileName);
                         if (allFileContents == null) {
                             allFileContents = stringRowMapOperator;

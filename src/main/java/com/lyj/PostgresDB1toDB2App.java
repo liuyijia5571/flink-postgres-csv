@@ -42,7 +42,7 @@ public class PostgresDB1toDB2App {
         // 通过命令行参来选择配置文件
         String oidActiveProfile = params.get("oid_db_profile");
 
-        // CSV 文件路径
+        // 通过命令行参来选择配置文件
         String newActiveProfile = params.get("new_db_profile");
 
         boolean checkParamsResult = checkParams(oidActiveProfile, newActiveProfile);
@@ -78,7 +78,7 @@ public class PostgresDB1toDB2App {
                 .build();
 
 
-        String sqlFilePath = args[2];
+        String sqlFilePath  = params.get("table_list");;
 
         File file = new File(sqlFilePath);
         if (!file.exists()) {
@@ -133,7 +133,7 @@ public class PostgresDB1toDB2App {
                         for (int i = 0; i < colNames.size(); i++) {
                             String colName = colNames.get(i);
                             String colClass = colClasses.get(i);
-                            setPsData(i + 1, colName, colClass, String.valueOf(row.getField(i)), ps, tableName);
+                            setPsData(i + 1, colName, colClass, row.getField(i), ps, tableName);
                         }
                     },
                     jdbcExecutionOptions,

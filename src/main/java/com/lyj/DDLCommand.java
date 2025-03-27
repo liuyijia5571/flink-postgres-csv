@@ -26,7 +26,7 @@ public class DDLCommand {
 
         String activeProfile = params.get(DB_PROFILE,"dev168");
 
-        String exeFolderPath = params.get("DDL_PATH","C:\\DML");
+        String exeFolderPath = params.get("ddl_path","C:\\DML");
 
         ConfigLoader.loadConfiguration(activeProfile);
 
@@ -39,8 +39,8 @@ public class DDLCommand {
                     if (!file.isDirectory()) {
                         String sqlFilePath = folderPath + "\\" + file.getName();
                         System.out.println("执行的文件名：" + file.getName());
-                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName(CHARSET_NAME_31J));
-//                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName("UTF-8"));
+//                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName(CHARSET_NAME_31J));
+                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName("UTF-8"));
                         // 拼接 SQL 文件中的所有语句
                         StringBuilder sqlBuilder = new StringBuilder();
                         for (String line : sqlLines) {
