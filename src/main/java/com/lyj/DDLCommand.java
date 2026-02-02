@@ -15,6 +15,8 @@ import static com.lyj.util.TableUtil.executeSql;
 
 /**
  * 执行DDL 语句在指定的数据库中
+ *
+ * java -cp flink-postgres-csv-1.0-SNAPSHOT.jar com.lyj.DDLCommand --db_profile test02 --ddl_path D:\flink\suz_nin_code_repalce\output_exec --charset_name UTF-8
  */
 public class DDLCommand {
 
@@ -24,9 +26,11 @@ public class DDLCommand {
         final ParameterTool params = ParameterTool.fromArgs(args);
         // 通过命令行参来选择配置文件
 
-        String activeProfile = params.get(DB_PROFILE,"dev168");
+        String activeProfile = params.get(DB_PROFILE,"dev43_rc202511226");
 
-        String exeFolderPath = params.get("ddl_path","C:\\DML");
+        String exeFolderPath = params.get("ddl_path","D:\\renmasall\\20251126");
+
+        String charsetName = params.get("charset_name", CHARSET_NAME_31J);
 
         ConfigLoader.loadConfiguration(activeProfile);
 
@@ -39,8 +43,8 @@ public class DDLCommand {
                     if (!file.isDirectory()) {
                         String sqlFilePath = folderPath + "\\" + file.getName();
                         System.out.println("执行的文件名：" + file.getName());
-//                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName(CHARSET_NAME_31J));
-                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName("UTF-8"));
+                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName(charsetName));
+//                        List<String> sqlLines = Files.readAllLines(Paths.get(sqlFilePath), Charset.forName("UTF-8"));
                         // 拼接 SQL 文件中的所有语句
                         StringBuilder sqlBuilder = new StringBuilder();
                         for (String line : sqlLines) {

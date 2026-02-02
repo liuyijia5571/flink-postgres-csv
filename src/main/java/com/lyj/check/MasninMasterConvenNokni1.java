@@ -25,7 +25,7 @@ public class MasninMasterConvenNokni1 {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String masnin00File = params.get("MASNIN00_FILE", "masnin00_file/masnin00_ich.tsv");
+        String masnin00File = params.get("MASNIN00_FILE", "masnin00_file/masnin00_fun.tsv");
 
         if (masnin00File == null) {
             logger.error("MASNIN00_FILE is null");

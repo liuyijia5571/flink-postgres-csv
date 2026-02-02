@@ -18,9 +18,9 @@ public class I25Replace {
     public static void main(String[] args) throws Exception {
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String inputFilePath = params.get("input_file_path", "C:\\flink\\I25");
+        String inputFilePath = params.get("input_file_path", "D:\\excel\\flink\\I25");
 
-        String newInputFilePath = params.get("result_file_path", "C:\\flink\\I25new");
+        String newInputFilePath = params.get("result_file_path", "D:\\excel\\flink\\I25new");
 
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();

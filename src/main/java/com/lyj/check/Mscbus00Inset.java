@@ -13,10 +13,7 @@ import static com.lyj.util.TableUtil.CHARSET_NAME_31J;
 import static com.lyj.util.TableUtil.getFormattedDate;
 
 /**
- * 船橋品種マスタ
- * M63F_船橋船橋品種マスタ
- * M05F_船橋品目マスタ
- * join
+ * 運送者・運送会社マスタ
  */
 public class Mscbus00Inset {
 

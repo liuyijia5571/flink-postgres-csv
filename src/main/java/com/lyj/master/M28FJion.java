@@ -19,9 +19,9 @@ public class M28FJion {
     public static void main(String[] args) throws Exception {
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String inputFilePath = params.get("input_file_path", "C:\\flink\\m28");
+        String inputFilePath = params.get("input_file_path", "D:\\excel\\flink\\m28");
 
-        String newInputFilePath = params.get("result_file_path", "C:\\flink\\m28new");
+        String newInputFilePath = params.get("result_file_path", "D:\\excel\\flink\\m28new");
 
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();

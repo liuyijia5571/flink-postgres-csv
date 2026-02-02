@@ -43,9 +43,9 @@ public class MasninFunInsert {
         //copy 字段 SEQ_NO，SCONI1，SHSNI1，
         String masnin00File = params.get("MASNIN00_FILE","masnin00_file/masnin00_fun.tsv");
 
-        String masninCode = params.get("MASNIN_CODE","masnin00_code_map/masnin00_fun.txt");
+        String masninCode = params.get("MASNIN_CODE","D:\\excel\\SVN\\java\\kppDataMerge\\data\\temp_old\\20251112_Mapping\\temp\\masnin00_code_map\\masnin00_fun.txt");
 
-        String m28File = params.get("M28_FILE","C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M28F.csv");
+        String m28File = params.get("M28_FILE","D:\\excel\\SVN\\java\\kppDataMerge\\data\\txtData\\M28F.csv");
 
         boolean checkParamsResult = checkParams(masnin00File, masninCode, m28File);
         if (!checkParamsResult) {

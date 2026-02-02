@@ -36,6 +36,12 @@ import static com.lyj.util.TableUtil.setFieldValue;
  * xuexiaodingtest
  * --truncate
  * true
+ *
+ * delete from xuexiaodingtest.u19_prod_db where "U19_レコード" in (
+ * select "U19_レコード"  from  xuexiaodingtest.u19_prod_db where "U19_買人コード" in (
+ * select "U19_買人コード"  from (
+ * select "U19_支社コード","U19_買人コード" ,count(1) from xuexiaodingtest.u19_prod_db group by "U19_支社コード","U19_買人コード"
+ * having count(1)  > 1) t1) and "U19_支社コード" = '34 ' and "U19_新買人コード"::text  like '8%') ;
  */
 public class U19ProdDbPostGreSql {
 
@@ -48,14 +54,14 @@ public class U19ProdDbPostGreSql {
         final ParameterTool params = ParameterTool.fromArgs(args);
         // 通过命令行参来选择配置文件
 
-        String activeProfile = params.get(DB_PROFILE);
+        String activeProfile = params.get(DB_PROFILE,"dev43");
 
         // schema
-        String schema = params.get("schema");
+        String schema = params.get("schema","xuexiaodingtest");
 
-        String inputFilePath = params.get("input_file_path");
+        String inputFilePath = params.get("input_file_path","C:\\SVN\\java\\kppDataMerge\\data\\temp_old\\20250331\\maskai00_code_map");
 
-        boolean isTruncate = params.getBoolean("truncate", false);
+        boolean isTruncate = params.getBoolean("truncate", true);
 
         boolean checkParamsResult = checkParams(activeProfile, schema, inputFilePath);
         if (!checkParamsResult) {

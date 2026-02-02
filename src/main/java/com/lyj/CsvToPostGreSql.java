@@ -106,7 +106,6 @@ public class CsvToPostGreSql {
             return row;
         });
 
-        insertData.print();
         insertDB(schema, colNames, tableName, columns, insertData);
 
         env.execute(CsvToPostGreSql.class.getName());

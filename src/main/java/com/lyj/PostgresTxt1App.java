@@ -56,6 +56,7 @@ public class PostgresTxt1App {
         //市川支社
         siksmMap.put("ICH", "35");
 
+
         subTable.add("KANFIL20");
         subTable.add("TKIFILU0");
         subTable.add("TKIHANM0");
@@ -221,16 +222,31 @@ public class PostgresTxt1App {
                         "SIKUR1 = '23' and pdyur1 = '2022'->wornak22.sumuri00\n" +
                         "SIKUR1 = '34' and pdyur1 = '2022'->worfun22.sumuri00\n" +
                         "SIKUR1 = '35' and pdyur1 = '2022'->worich22.sumuri00\n" +
+                                "SIKUR1 = '21' and pdyur1 = '2022'->rentstcho.sumuri0022\n" +
+                                "SIKUR1 = '22' and pdyur1 = '2022'->rentstsuz.sumuri0022\n" +
+                                "SIKUR1 = '23' and pdyur1 = '2022'->rentstnak.sumuri0022\n" +
+                                "SIKUR1 = '34' and pdyur1 = '2022'->rentstfun.sumuri0022\n" +
+                                "SIKUR1 = '35' and pdyur1 = '2022'->rentstich.sumuri0022\n" +
                         "SIKUR1 = '21' and pdyur1 = '2023'->worcho23.sumuri00\n" +
                         "SIKUR1 = '22' and pdyur1 = '2023'->worsuz23.sumuri00\n" +
                         "SIKUR1 = '23' and pdyur1 = '2023'->wornak23.sumuri00\n" +
                         "SIKUR1 = '34' and pdyur1 = '2023'->worfun23.sumuri00\n" +
                         "SIKUR1 = '35' and pdyur1 = '2023'->worich23.sumuri00\n" +
+                                "SIKUR1 = '21' and pdyur1 = '2023'->rentstcho.sumuri0023\n" +
+                                "SIKUR1 = '22' and pdyur1 = '2023'->rentstsuz.sumuri0023\n" +
+                                "SIKUR1 = '23' and pdyur1 = '2023'->rentstnak.sumuri0023\n" +
+                                "SIKUR1 = '34' and pdyur1 = '2023'->rentstfun.sumuri0023\n" +
+                                "SIKUR1 = '35' and pdyur1 = '2023'->rentstich.sumuri0023\n" +
                         "SIKUR1 = '21' and pdyur1 = '2024'->worcho24.sumuri00\n" +
                         "SIKUR1 = '22' and pdyur1 = '2024'->worsuz24.sumuri00\n" +
                         "SIKUR1 = '23' and pdyur1 = '2024'->wornak24.sumuri00\n" +
                         "SIKUR1 = '34' and pdyur1 = '2024'->worfun24.sumuri00\n" +
                         "SIKUR1 = '35' and pdyur1 = '2024'->worich24.sumuri00\n" +
+                                "SIKUR1 = '21' and pdyur1 = '2024'->rentstcho.sumuri0024\n" +
+                                "SIKUR1 = '22' and pdyur1 = '2024'->rentstsuz.sumuri0024\n" +
+                                "SIKUR1 = '23' and pdyur1 = '2024'->rentstnak.sumuri0024\n" +
+                                "SIKUR1 = '34' and pdyur1 = '2024'->rentstfun.sumuri0024\n" +
+                                "SIKUR1 = '35' and pdyur1 = '2024'->rentstich.sumuri0024\n" +
                         "SIKUR1 = '21' and pdyur1 = '2025'->renworcho.sumuri00\n" +
                         "SIKUR1 = '22' and pdyur1 = '2025'->renworsuz.sumuri00\n" +
                         "SIKUR1 = '23' and pdyur1 = '2025'->renwornak.sumuri00\n" +
@@ -275,6 +291,21 @@ public class PostgresTxt1App {
                         "SIKUK1 = '23' and nenuk1 = '2024'->wornak24.tkihanm0\n" +
                         "SIKUK1 = '34' and nenuk1 = '2024'->worfun24.tkihanm0\n" +
                         "SIKUK1 = '35' and nenuk1 = '2024'->worich24.tkihanm0\n" +
+                                "SIKUK1 = '21' and nenuk1 = '2022'->rentstcho.tkihanm022\n" +
+                                "SIKUK1 = '22' and nenuk1 = '2022'->rentstsuz.tkihanm022\n" +
+                                "SIKUK1 = '23' and nenuk1 = '2022'->rentstnak.tkihanm022\n" +
+                                "SIKUK1 = '34' and nenuk1 = '2022'->rentstfun.tkihanm022\n" +
+                                "SIKUK1 = '35' and nenuk1 = '2022'->rentstich.tkihanm022\n" +
+                                "SIKUK1 = '21' and nenuk1 = '2023'->rentstcho.tkihanm023\n" +
+                                "SIKUK1 = '22' and nenuk1 = '2023'->rentstsuz.tkihanm023\n" +
+                                "SIKUK1 = '23' and nenuk1 = '2023'->rentstnak.tkihanm023\n" +
+                                "SIKUK1 = '34' and nenuk1 = '2023'->rentstfun.tkihanm023\n" +
+                                "SIKUK1 = '35' and nenuk1 = '2023'->rentstich.tkihanm023\n" +
+                                "SIKUK1 = '21' and nenuk1 = '2024'->rentstcho.tkihanm024\n" +
+                                "SIKUK1 = '22' and nenuk1 = '2024'->rentstsuz.tkihanm024\n" +
+                                "SIKUK1 = '23' and nenuk1 = '2024'->rentstnak.tkihanm024\n" +
+                                "SIKUK1 = '34' and nenuk1 = '2024'->rentstfun.tkihanm024\n" +
+                                "SIKUK1 = '35' and nenuk1 = '2024'->rentstich.tkihanm024\n" +
                         "SIKUK1 = '21' and nenuk1 = '2025'->renworcho.tkihanm0\n" +
                         "SIKUK1 = '22' and nenuk1 = '2025'->renworsuz.tkihanm0\n" +
                         "SIKUK1 = '23' and nenuk1 = '2025'->renwornak.tkihanm0\n" +
@@ -297,6 +328,21 @@ public class PostgresTxt1App {
                         "SIKTK1 = '23' and nentk1 = '2024'->wornak24.tkitokm0\n" +
                         "SIKTK1 = '34' and nentk1 = '2024'->worfun24.tkitokm0\n" +
                         "SIKTK1 = '35' and nentk1 = '2024'->worich24.tkitokm0\n" +
+                                "SIKTK1 = '21' and nentk1 = '2022'->rentstcho.tkitokm022\n" +
+                                "SIKTK1 = '22' and nentk1 = '2022'->rentstsuz.tkitokm022\n" +
+                                "SIKTK1 = '23' and nentk1 = '2022'->rentstnak.tkitokm022\n" +
+                                "SIKTK1 = '34' and nentk1 = '2022'->rentstfun.tkitokm022\n" +
+                                "SIKTK1 = '35' and nentk1 = '2022'->rentstich.tkitokm022\n" +
+                                "SIKTK1 = '21' and nentk1 = '2023'->rentstcho.tkitokm023\n" +
+                                "SIKTK1 = '22' and nentk1 = '2023'->rentstsuz.tkitokm023\n" +
+                                "SIKTK1 = '23' and nentk1 = '2023'->rentstnak.tkitokm023\n" +
+                                "SIKTK1 = '34' and nentk1 = '2023'->rentstfun.tkitokm023\n" +
+                                "SIKTK1 = '35' and nentk1 = '2023'->rentstich.tkitokm023\n" +
+                                "SIKTK1 = '21' and nentk1 = '2024'->rentstcho.tkitokm024\n" +
+                                "SIKTK1 = '22' and nentk1 = '2024'->rentstsuz.tkitokm024\n" +
+                                "SIKTK1 = '23' and nentk1 = '2024'->rentstnak.tkitokm024\n" +
+                                "SIKTK1 = '34' and nentk1 = '2024'->rentstfun.tkitokm024\n" +
+                                "SIKTK1 = '35' and nentk1 = '2024'->rentstich.tkitokm024\n" +
                         "SIKTK1 = '21' and nentk1 = '2025'->renworcho.tkitokm0\n" +
                         "SIKTK1 = '22' and nentk1 = '2025'->renworsuz.tkitokm0\n" +
                         "SIKTK1 = '23' and nentk1 = '2025'->renwornak.tkitokm0\n" +

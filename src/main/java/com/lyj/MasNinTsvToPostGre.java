@@ -1,14 +1,12 @@
 package com.lyj;
 
 
-import com.lyj.util.ConfigLoader;
 import com.lyj.util.ExcelUtil;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.operators.JoinOperator;
-import org.apache.flink.api.java.operators.MapOperator;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.util.Collector;
@@ -24,7 +22,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +51,7 @@ public class MasNinTsvToPostGre {
         final ParameterTool params = ParameterTool.fromArgs(args);
 
         // CSV 文件
-        String folderPath = params.get("txt_path", "C:\\5月\\1.txt");
+        String folderPath = params.get("txt_path", "D:\\20260105\\renpgmich.masnin00.tsv");
 
         boolean checkParamsResult = checkParams(folderPath);
         if (!checkParamsResult) {
@@ -143,7 +140,8 @@ public class MasNinTsvToPostGre {
                                 }
 
                         )
-                        .equalTo(u -> (String) u.getField(0)).with((first, second) -> {
+                        .equalTo(u -> (String) u.getField(0))
+                        .with((first, second) -> {
                                 String[] split = first.split("\t");
                                 split[indexKcosi1] = "0";
                                 split[indexShcni1] = "0";

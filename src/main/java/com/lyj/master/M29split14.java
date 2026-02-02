@@ -18,9 +18,9 @@ public class M29split14 {
     public static void main(String[] args) throws Exception {
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String inputFilePath = params.get("input_file_path", "C:\\flink\\m29");
+        String inputFilePath = params.get("input_file_path", "D:\\excel\\flink\\m29");
 
-        String newInputFilePath = params.get("result_file_path", "C:\\flink\\m29new");
+        String newInputFilePath = params.get("result_file_path", "D:\\excel\\flink\\m29new");
 
 
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();

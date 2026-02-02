@@ -15,7 +15,7 @@ import static com.lyj.util.TableUtil.getFormattedDate;
 
 /**
  * 船橋品種マスタ
- * M63F_船橋船橋品種マスタ
+ * M63F_船橋品種マスタ
  * M05F_船橋品目マスタ
  * join
  */
@@ -27,9 +27,11 @@ public class Mscfhs00Join {
 
         final ParameterTool params = ParameterTool.fromArgs(args);
 
-        String m63fFile = params.get("M63F_file","C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M63F.csv");
+        String m63fFile = params.get("M63F_file", "D:\\船橋品種マスタ\\M63F.csv");
 
-        String m05fFile = params.get("M05F_file","C:\\SVN\\java\\kppDataMerge\\data\\txtData\\M05F.csv");
+        String m05fFile = params.get("M05F_file", "D:\\船橋品種マスタ\\M05F.csv");
+
+        String hinFile = params.get("M05F_file", "D:\\船橋品種マスタ\\品名マスタ(中野)_新旧対比表.txt");
         boolean checkParamsResult = checkParams(m63fFile, m05fFile);
 
         if (!checkParamsResult) {
@@ -42,9 +44,11 @@ public class Mscfhs00Join {
 
         env.setParallelism(1);
 
-        DataSet<String> m63fDs = env.readTextFile(m63fFile,CHARSET_NAME_31J).filter(u->!"".equals(u));
+        DataSet<String> m63fDs = env.readTextFile(m63fFile, CHARSET_NAME_31J).filter(u -> !"".equals(u));
 
-        DataSet<String> m05fDs = env.readTextFile(m05fFile,CHARSET_NAME_31J).filter(u->!"".equals(u));
+        DataSet<String> m05fDs = env.readTextFile(m05fFile, CHARSET_NAME_31J).filter(u -> !"".equals(u));
+
+        DataSet<String[]> hinDs = env.readTextFile(hinFile).map(u -> u.split("\t")).filter(u -> u.length > 2);
 
         DataSet<Row> result = m63fDs.leftOuterJoin(m05fDs)
                 .where(u -> u.split(",")[0]).equalTo(
@@ -55,7 +59,7 @@ public class Mscfhs00Join {
                             return u;
                         }
                 ).with(((first, second) -> {
-                    Row row = new Row(8);
+                    Row row = new Row(9);
                     String[] firstSplit = first.split(",");
                     //品種コード M63_品種CD
                     row.setField(0, firstSplit[0]);
@@ -76,12 +80,24 @@ public class Mscfhs00Join {
                     return row;
                 }));
 
-        result.map(u->{
+        result.leftOuterJoin(hinDs).where(u -> u.getField(3).toString() + u.getField(4).toString())
+                .equalTo(u -> u[2]).with((first, second) -> {
+            if (second != null) {
+                //品種名 M63_品種名
+                first.setField(1, second[0]);
+                //品種名ｶﾅ
+                first.setField(2, second[1]);
+                first.setField(8, "");
+            } else {
+                first.setField(8,"fail");
+            }
+            return first;
+        }).map(u -> {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < u.getArity(); i++) {
                 if (i == u.getArity() - 1) {
                     sb.append(u.getField(i));
-                }else {
+                } else {
                     sb.append(u.getField(i)).append("\t");
                 }
             }

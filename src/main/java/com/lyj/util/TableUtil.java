@@ -118,7 +118,7 @@ public class TableUtil {
         sb.append("SELECT column_name, data_type , ");
         sb.append(" CASE\n")
                 .append("        WHEN CHARACTER_MAXIMUM_LENGTH IS NOT NULL THEN CHARACTER_MAXIMUM_LENGTH \n")
-                .append("        WHEN DATA_TYPE IN ('decimal', 'numeric') THEN NUMERIC_PRECISION + NUMERIC_SCALE \n")
+                .append("        WHEN DATA_TYPE IN ('decimal', 'numeric') THEN NUMERIC_PRECISION - NUMERIC_SCALE \n")
                 .append("        WHEN DATA_TYPE IN ('date', 'timestamp', 'datetime') THEN 10 \n")
                 .append("        ELSE NULL \n")
                 .append("    END AS col_length, \n")
@@ -384,32 +384,6 @@ public class TableUtil {
         return new RowTypeInfo(types, names);
     }
 
-    private static int[] getTypeInformation(Map<String, List<String>> columns) {
-        List<String> colClass = columns.get("COL_CLASS");
-
-        int[] sqlTypes = new int[colClass.size()];
-        for (int i = 0; i < colClass.size(); i++) {
-            String columnType = colClass.get(i);
-            switch (columnType) {
-                case "integer":
-                    sqlTypes[i] = Types.INTEGER;
-                    break;
-                case "numeric":
-                    sqlTypes[i] = Types.NUMERIC;
-                    break;
-                case "timestamp without time zone":
-                    sqlTypes[i] = Types.TIMESTAMP;
-                    break;
-                default:
-                    sqlTypes[i] = Types.VARCHAR;
-                    break;
-            }
-
-        }
-
-        return sqlTypes;
-    }
-
     public static int[] getSqlTypes(Map<String, List<String>> columns) {
         List<String> colClass = columns.get("COL_CLASS");
         int[] sqlTypes = new int[colClass.size()];
@@ -571,7 +545,8 @@ public class TableUtil {
     }
 
     public static boolean deleteDataByFileName(String schema, String tableName, String fileName) {
-        return deleteData(schema, tableName, FILE_NAME, fileName);
+//        return deleteData(schema, tableName, FILE_NAME, fileName);
+        return true;
     }
 
     public static boolean deleteData(String schema, String tableName, String col_name, String fileName) {

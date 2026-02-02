@@ -19,6 +19,7 @@ import org.apache.flink.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +80,8 @@ public class CompareDB {
         String newTable = params.get("new_table", oldTable);
 
         //result_file
-        String resultFile = params.get("result_file", "output/" + oldSchema + "." + oldTable + "_result.csv");
+        String resultFile = params.get("result_file", "output");
+
 
         boolean checkParamsResult = checkParams(activeProfile, oldSchema, newSchema, oldTable, newTable);
         if (!checkParamsResult) {
@@ -135,7 +137,7 @@ public class CompareDB {
                 }).returns(Types.TUPLE(Types.STRING, Types.ROW(typeInformationArr)));
 
         // 创建 CsvOutputFormat
-        CsvOutputFormat<Tuple2<String, Row>> csvOutputFormat = new CsvOutputFormat<>(new Path(resultFile));
+        CsvOutputFormat<Tuple2<String, Row>> csvOutputFormat = new CsvOutputFormat<>(new Path(resultFile + File.separator+ oldSchema + "." + oldTable + "_result.csv"));
         csvOutputFormat.setWriteMode(FileSystem.WriteMode.OVERWRITE);
         csvOutputFormat.setCharsetName(CHARSET_NAME_31J); // 指定编码格式
 
